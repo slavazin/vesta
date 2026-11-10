@@ -1,0 +1,4 @@
+.state/
+.engine.next/
+.engine.old/
+__pycache__/

@@ -1,0 +1,10 @@
+{
+ "first": {"title": "Every figure in a report is checked against its source on the day it is sent", "when": "sending a report that holds figures", "why": "a stale figure went out in the January report", "scopes": ["reports/"], "context": "Reports are drafted over several days.", "false-if": "the source is frozen before drafting starts"},
+ "second": {"title": "A letter to a client is signed by the owner, never by the office", "when": "writing or sending a letter to a client", "why": "two clients asked who had written to them", "scopes": ["letters/"], "context": "Clients know the owner by name.", "false-if": "letters are sent by a named account manager"},
+ "a": {"task": "finish the first quarter report", "paths": ["reports/2026-q1.md"], "change": "reports/2026-q1.md",
+       "notes": [{"title": "The March figure came from two sheets that disagree", "body": "The sales sheet and the ledger give different totals for March.", "via": "off-map", "anchor": "reports/2026-q1.md"},
+                 {"title": "The owner had the letter signed in their own name", "body": "The draft was signed for the office; the owner asked for their own name.", "via": "owner-steer", "anchor": "owner, 2026-01-05", "steer-kind": "correction", "moment": "close", "missed-by": "none"}]},
+ "b": {"task": "answer Ms Okafor", "paths": ["letters/okafor-2026-03.txt"], "change": "letters/okafor-2026-03.txt",
+       "notes": [{"title": "The owner again changed the signature to their own name", "body": "A second letter drafted for the office was re-signed by the owner.", "via": "owner-steer", "anchor": "owner, 2026-01-06", "steer-kind": "correction", "moment": "close", "missed-by": "none"}]},
+ "c": {"task": "start the second quarter report", "paths": ["reports/2026-q1.md"]}
+}

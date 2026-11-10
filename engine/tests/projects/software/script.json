@@ -1,0 +1,10 @@
+{
+ "first": {"title": "Every call to an outside service sets a timeout of ten seconds or less", "when": "adding or changing a call to an outside service", "why": "an unbounded wait in one call stalls the whole job queue", "scopes": ["src/http/"], "context": "Jobs run one at a time from a single queue.", "false-if": "a service this project depends on needs more than ten seconds"},
+ "second": {"title": "A change to the guide is read aloud once before it is sent", "when": "changing a page of the user guide", "why": "a page nobody read back went out with a wrong command twice", "scopes": ["docs/"], "context": "The guide is the only thing most users read.", "false-if": "the guide is generated from the code"},
+ "a": {"task": "raise the timeout of the export call", "paths": ["src/http/client.py"], "change": "src/http/client.py",
+       "notes": [{"title": "The export asks for the date twice", "body": "Both stages prompt for it.", "via": "off-map", "anchor": "src/http/client.py"},
+                 {"title": "The owner had the guide page read back before sending", "body": "The owner asked for the changed page to be read aloud; nothing asked for it.", "via": "owner-steer", "anchor": "owner, 2026-01-05", "steer-kind": "correction", "moment": "close", "missed-by": "none"}]},
+ "b": {"task": "document the new timeout", "paths": ["docs/guide.md"], "change": "docs/guide.md",
+       "notes": [{"title": "The owner again had a guide page read back", "body": "A second changed page went out only after the owner asked for it to be read aloud.", "via": "owner-steer", "anchor": "owner, 2026-01-06", "steer-kind": "correction", "moment": "close", "missed-by": "none"}]},
+ "c": {"task": "add a second export format", "paths": ["src/http/client.py"]}
+}

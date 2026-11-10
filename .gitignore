@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.DS_Store
+spec/
+engine/tests/data/neutrality-terms.txt
+.env
+.venv/
+.idea/
+.vscode/

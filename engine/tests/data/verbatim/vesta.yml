@@ -1,0 +1,58 @@
+schema: 1
+owner: ""
+pointer-file: ""
+engagement: standard
+stores:
+  decisions:
+    path: decisions
+    kind: ledger
+    recall: index
+    governed: true
+    label:
+      prefix: D
+      digits: 3
+  observations:
+    path: observations
+    kind: ledger
+    recall: none
+    governed: false
+    label:
+      prefix: O
+      digits: 0
+  proposals:
+    path: proposals
+    kind: register
+    recall: none
+    governed: false
+    label:
+      prefix: P
+      digits: 3
+checkpoints:
+  start:
+    walk: walks/start.md
+    steps: [recall, triggers, rows, lenses, notices]
+  close:
+    walk: walks/close.md
+    steps: [bundle, marks, sweep, contradictions, steers, rows, lenses, mint, choices, offers, surface]
+    short: [bundle, marks, steers, mint]
+  learn:
+    walk: walks/learn.md
+    steps: [window, counts, trigger-review, consolidate, group, route, draft, gate, seal]
+recall:
+  long-index-at: 60
+reminders:
+  learn:
+    enabled: true
+    open-observations: 25
+    sessions-since-pass: 0
+  pending-proposals:
+    enabled: true
+adapters:
+  changes: auto
+  capture: [jot]
+changes:
+  ignore: [.git, node_modules, .venv, dist, build]
+proposals:
+  kinds: [add, supersede, merge, retire, latch-edit, correct, resolve-trigger, row, lens, language, schema, config]
+checks:
+  run: [config, layout, records, walks, links, probes, admitted, pointer-block, lengths, language]

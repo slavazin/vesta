@@ -1,0 +1,20 @@
+{
+ "pointer-block.md": "a8ffad6644f98cbb202fcce118474e1f3178eb2ac0896973306d949997dfbed9",
+ "vesta/.gitignore": "4c72918696deddac8ec36b72e6e22c8d2d19a7cc990cf6a75aa3eeae11f0723d",
+ "vesta/INTERNALS.md": "0129afa51fcffd2e48f439259753cf0468c0cb6b291b8e134fb21baad3b429ff",
+ "vesta/README.md": "c08554ccbd380477df5ec28d731e62453dbb757e6ebdd7ea8ec75f9ffee46584",
+ "vesta/decisions/README.md": "3c6c162ec01944fcc54662fb18692dee7b9ebe7e4d726c6fa26958909da7f7ff",
+ "vesta/decisions/SCHEMA.md": "5c52439475b3e16c18240bce9a9ee404caec7000cc4957780376935e77f012ce",
+ "vesta/language.md": "fe22ec19d5c393fc7d084c711a315f015007281aa500c9348f88ecd500192b17",
+ "vesta/log/admissions.md": "7d0579836f5b274c3e55cc804a488de94360fece48ea1c3f85a7338904435cb2",
+ "vesta/log/consultations.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "vesta/observations/README.md": "a96d83e3df815df142e8c245b6dace50eec282017e6779df2bd2cf648b37ff22",
+ "vesta/observations/SCHEMA.md": "9e5284f334d2f33c72d250866ae82bf27396b54987f1ab10372470642149c9d7",
+ "vesta/proposals/README.md": "b10a89fb3a620bf4801ac3ebce7a84c247af6a4dfacf4a2813542a1642cb7cda",
+ "vesta/proposals/SCHEMA.md": "04bcf0b3570c34727403bbc2307a4f227490b642fe7474fca22975dd8d208af7",
+ "vesta/vesta.yml": "fb2fcaaa01e2d54dc7ef13a02986a293e56dac92d9fb74b90d3ae85436726902",
+ "vesta/walks/README.md": "63517d6ce890027d8e299fe924c39fbb2a293811fee020ff18bad3fcc7a9a308",
+ "vesta/walks/close.md": "de78b95341cd6a40f2524a8487edb051c0071b1d60499a55cf31616d7561990c",
+ "vesta/walks/learn.md": "d1836badd08173a6c0a3f385d4365d3c2a8c320b68789c0283928457b9b994ae",
+ "vesta/walks/start.md": "58d13fc19af111bd1cc80281d12c2ce3b4f533bacbd2c41c689293d8ffe3f37e"
+}

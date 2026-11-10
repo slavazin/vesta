@@ -1,0 +1,10 @@
+# A made-up terms list, for the tests of the neutrality check. One term per line; matched as a whole
+# word, without regard to case. Lines opening "re:" are case-sensitive regular expressions.
+Northwind
+Project Heron
+heron-tools
+Marlow
+re:§ ?\d
+re:\bV2\b
+re:\[I ?\d+\]
+re:\bI\d{1,2}\b
