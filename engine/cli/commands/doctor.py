@@ -12,7 +12,7 @@ from kernel.shipped import MANIFEST
 from kernel.errors import UsageError
 from kernel.version import ENGINE
 from model.abstractions import SourceError
-from session import history, passes, state
+from session import asides, history, passes, settings, state
 
 
 def _is_file(tree, path):
@@ -57,6 +57,19 @@ def run(context, arguments):
         context.write("- Pointer file: %s, which is not in the project" % config.pointer_file)
     context.write("- Approver name on record: %s" % (config.owner or "none; an approval is recorded without one"))
     context.write("- Engagement: %s" % config.engagement)
+    try:
+        for name in settings.names(context):
+            context.write("- Setting `%s` on this machine: %s" % (name, settings.said(settings.resolve(context, name))))
+    except UsageError as error:
+        context.write("- Settings on this machine: %s" % error)
+    try:
+        copies = asides.read(context.tree)
+        silent = [entry for entry in copies if entry["answer"] not in (asides.NOTED, asides.NOTHING)]
+        if copies:
+            context.write("- Copies of a conversation started aside: %d kept on record, of which %d did not report back%s" % (
+                len(copies), len(silent), "; the last of those: %s" % (silent[-1]["answer"] or "no report, started %s" % silent[-1]["at"]) if silent else ""))
+    except UsageError as error:
+        context.write("- Copies of a conversation started aside: %s" % error)
     unclosed = state.open_ones(context.tree)
     context.write("- Sessions not closed: %s" % (len(unclosed) or "none"))
     now = context.clock.now()

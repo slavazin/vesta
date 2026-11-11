@@ -6,6 +6,7 @@ error; 3 refused, because the command would break a rule.
 from __future__ import annotations
 
 import contextlib
+import io
 import os
 import sys
 
@@ -50,8 +51,20 @@ def _damaged():
         return True
 
 
-def main(argv, root=None, clock=None, out=None, err=None, stdin=None):
+def main(argv, root=None, clock=None, out=None, err=None, stdin=None, environ=None):
     """Run one command. `root`, `clock`, `out` and `err` are for callers inside one process."""
+    if list(argv) in [[name] for name in manifest.SILENT]:
+        # Run by a harness and not by an agent: what it prints or how it ends could be put in front of
+        # the agent or the owner, so it prints nothing and ends well, whatever happens.
+        try:
+            _main(argv, root, clock, io.StringIO(), io.StringIO(), stdin, environ)
+        except BaseException:
+            pass
+        return OK
+    return _main(argv, root, clock, out, err, stdin, environ)
+
+
+def _main(argv, root, clock, out, err, stdin, environ):
     out = out if out is not None else sys.stdout
     err = err if err is not None else sys.stderr
     if not argv:
@@ -85,7 +98,7 @@ def main(argv, root=None, clock=None, out=None, err=None, stdin=None):
         for line in upgrading.notes(trees.DiskTree(root), here):
             out.write(line + "\n")
         with _alone(trees.DiskTree(root), alone):
-            context = build.context(root, out, clock)
+            context = build.context(root, out, clock, environ=environ)
             context.stdin = stdin
             for line in handedits.log(context, alone):
                 out.write(line + "\n")

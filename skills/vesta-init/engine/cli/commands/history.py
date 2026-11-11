@@ -7,10 +7,10 @@ import re
 from cli import args
 from kernel.errors import Refusal, UsageError
 from model.abstractions import HistoryError
-from session import history, state
-from steps import earlier
+from session import harness, history, state
+from steps import earlier, instruction
 
-ACTS = ("sources", "list", "turns", "forget")
+ACTS = ("sources", "where", "list", "turns", "forget")
 LAST, MOST = 5, 20
 # How many files `list` opens at the most, looking for the ones that hold something new; how many
 # it names of the ones that do not read.
@@ -50,6 +50,28 @@ def _sources(context, given):
     return 0
 
 
+def _where(context, given):
+    """What to ask the owner before any place is looked at. Reads no file and lists no folder."""
+    context.write("# Where to read earlier conversations from")
+    context.write()
+    if given:
+        context.write("A path was given. Run `history sources %s %s`: it looks at that path and nowhere else, and says what each place finds there: "
+                      "%s. Use the place that fits what the owner said the path holds; every later command takes that place and `%s %s`. "
+                      "A path that is not absolute is read from the project root."
+                      % (history.PATH_OPTION, history.quoted(given),
+                         "; ".join("`%s` for %s" % (name, context.member(history.TABLE, name).name) for name in history.sources(context)),
+                         history.PATH_OPTION, history.quoted(given)))
+        return 0
+    running = harness.current(context)
+    kept = running.history if running is not None else ""
+    if kept in history.sources(context):
+        folder = " or ".join(place.replace("\\", "/") for place in history.member(context, kept).places())
+        context.write(instruction.fill(instruction.read("history-where"), context, {"folder": folder, "name": running.name}))
+    else:
+        context.write(instruction.fill(instruction.read("history-where-unknown"), context))
+    return 0
+
+
 def _number(options, name, default, most=None):
     value = options.get(name)
     if value is None:
@@ -65,9 +87,15 @@ def _list(context, found, options):
     done = history.marks_read(context.tree, readings)
     conversations, passed = history.listed(found)
     shown, reading, read_back, empty, unreadable, opened = [], [], 0, 0, [], 0
+    # The conversation this command was started from is still being held: it is reviewed, not read back.
+    running = harness.current(context)
+    current = running.conversation() if running is not None and running.history == found.id and not found.given else ""
+    current = current if any(one.ref == current for one in conversations) else ""
     for one in reversed(conversations):
         if len(shown) == last or opened == SCANNED:
             break
+        if one.ref == current:
+            continue  # said below, and counted in neither number
         opened += 1
         try:
             turns = found.turns(one)
@@ -96,10 +124,13 @@ def _list(context, found, options):
         context.write(line)
     context.write()
     context.write("Listed, newest first: %d. Up to %d were asked for (`--last <n>` takes up to %d). Read them oldest first." % (len(shown), last, MOST))
+    if current:
+        context.write("Left out: `%s`, the conversation this command was started from. It is read at its own review." % current)
     if reading:
         context.write("Left open by an earlier run, and not among the ones listed:")
         for line in reading:
             context.write(line)
+    conversations = [one for one in conversations if one.ref != current]
     context.write("Opened to find them: %d of %d file%s. Of those, read back in full before: %d; holding nothing to read: %d; not readable: %d."
                   % (opened, len(conversations), "" if len(conversations) == 1 else "s", read_back, empty, len(unreadable)))
     if unreadable:
@@ -119,9 +150,17 @@ def _turns(context, found, words, options):
     if history.SESSION_OPTION in options:
         session = state.named(context.tree, options[history.SESSION_OPTION])
         origin = session.origin or {}
-        if (origin.get("history"), origin.get("conversation"), origin.get("in") or "") != (found.id, words[2], found.given):
+        if session.origin is None:
+            # A task's session, which read its own conversation back at its review.
+            conversation = history.find(found, words[2])
+            marks = history.held(history.read(context.tree), session.id, history.key(found, conversation))
+            if not marks:
+                raise UsageError("%s read nothing back from that conversation" % session.id)
+            pieces = history.pieces(history.said(found, conversation), set(marks))
+        elif (origin.get("history"), origin.get("conversation"), origin.get("in") or "") != (found.id, words[2], found.given):
             raise UsageError("%s was not opened to read back that conversation" % session.id)
-        _, _, pieces = earlier.of_session(context, session)
+        else:
+            _, _, pieces = earlier.of_session(context, session)
     else:
         pieces = history.pieces(history.said(found, history.find(found, words[2])))
     start = _number(options, "--at", 1)
@@ -160,6 +199,10 @@ def run(context, arguments):
     if options.get(history.PATH_OPTION) == "":
         raise UsageError("`%s` was given no path" % history.PATH_OPTION)
     given = options.get(history.PATH_OPTION, "")
+    if act == "where":
+        if len(words) > 1:
+            raise UsageError("`history where` takes no `%s`" % words[1])
+        return _where(context, given)
     if act == "sources":
         if len(words) > 1:
             raise UsageError("`history sources` takes no `%s`" % words[1])

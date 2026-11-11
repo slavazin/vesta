@@ -13,5 +13,8 @@ and title, and a note by its title. Leave out
 the sheet's own words: walk, row, lens, latch, bar, ladder, sweep, mark, bundle,
 trigger, index; and never give an internal id.
 
-If the owner corrects something after this report, run `jot --steer -` with their words. The engine
+[jotting: later, aside] If the owner corrects something after this report, note nothing: it is read back from this
+conversation at the next review, or by `/vesta-backfill`.
+
+[jotting: here] If the owner corrects something after this report, run `jot --steer -` with their words. The engine
 opens a session to hold it, and the next start will offer to close that session.

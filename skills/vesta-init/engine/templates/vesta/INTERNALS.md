@@ -23,7 +23,7 @@ For whoever wants the mechanism, and for the agent. Using Vesta does not require
 | `.manifest.json` | the fingerprint of every file as shipped, read on upgrade |
 | `.gitignore` | keeps working state out of version control |
 | `.engine/` | the engine; replaced on upgrade |
-| `.state/` | working state of open sessions; never committed |
+| `.state/` | working state of open sessions, and what was chosen on this machine; never committed |
 
 ## How changes are made
 
@@ -31,7 +31,10 @@ For whoever wants the mechanism, and for the agent. Using Vesta does not require
   they did; a name or a reference given with it is bookkeeping.
 - The change made first stands. A waiting proposal it leaves unable to be applied is closed as stale, with
   a line in `log/admissions.md` saying what overtook it.
-- Observations are written freely and decide nothing.
+- Observations are written freely and decide nothing. How one is written is in two sections of its
+  store's `SCHEMA.md`, *Title and body* and *Do and Don't*; every sheet that writes observations prints
+  them, so a task's review and a conversation read back are held to the same words. Where the schema
+  has a `source` field, the engine fills it: `review` or `read-back`.
 - A decision is replaced by a successor, never rewritten or annotated.
 - Nothing is retired for being quiet. A decision leaves only when its subject has left the project.
 - A decision, a walk file or `language.md` may be edited by hand. The next command logs the edit in
@@ -39,6 +42,10 @@ For whoever wants the mechanism, and for the agent. Using Vesta does not require
 - `vesta.yml` and every `SCHEMA.md` are what the engine reads the folder by. One edited by hand is reported
   by `check` as an error until the owner accepts it with `adopt`, and no change is written over it.
 
+- `/vesta-config` changes how Vesta behaves by asking. `config` lists what can be changed and how each
+  thing stands; `config set <key> <value>` checks the value and drafts the change to `vesta.yml` as a
+  proposal with nothing left to fill, whose source is `owner`. It is applied like any other, once the
+  owner approves it. What is one person's or one machine's own is a setting: see *Settings*.
 - Three keys of `vesta.yml` are the owner's own setup answers and need no proposal until the first
   proposal is decided: `owner`, `engagement` and `pointer-file`, each written by `init`.
 
@@ -103,6 +110,46 @@ For whoever wants the mechanism, and for the agent. Using Vesta does not require
   the sheet.
 - A project whose `vesta.yml` names no `backfill` walk has the shipped one, with the steps `earlier` and
   `mint`, for as long as `walks/backfill.md` is there. Deleting that file removes the walk.
+
+## Settings
+
+- A setting is something that differs by the person or the machine and never by the project: which
+  program the agent runs in, and who does two pieces of Vesta's own work. The project's own choices
+  are in `vesta.yml` and change through a proposal; a setting is kept in `.state/settings.json`, on
+  this machine, is never committed, and is chosen with `setting <name> <answer>`.
+- `setting` prints every setting as it stands; `setting <name>` prints one with what each answer
+  means; `setting <name> --clear` forgets what was chosen. `doctor` prints each as it stands.
+- A sheet prints only the text of the answer in effect. What the other answers would have asked is
+  not printed, so nobody reads it. Where a setting's question is still to be put to the owner, the
+  sheet prints it once, with one line for each answer that can take effect on this machine.
+- `harness` is found from the environment a command is started in. The engine knows Claude Code;
+  anything else is `other`, in which the engine finds no conversation and starts no copy of one.
+- `jotting` says who notes the owner's corrections while a task is worked on. `here`: the working
+  agent, with `jot --steer`. `later`: nobody during the work; at the review, what the owner said since
+  the task began is read back from the conversation as the harness keeps it. `aside`: each time the
+  owner says something the harness runs `aside`, which starts a copy of the conversation; the copy
+  notes a correction where there is one, reports back, and ends.
+- `review` says who carries out the first part of the end-of-task review, which reads the task back
+  and writes notes. `here`: the working agent. `aside`: `walk close` prints a command in place of the
+  part; that command, `aside walk close`, starts a copy of the conversation, waits a minute and a half
+  for it, and prints the notes the copy wrote and the command for the next part, or that the copy is
+  still at work and the command is to be run again. A copy is given fifteen minutes in all, and
+  `aside walk close --stop` ends it. While a copy carries the part out, `walk close --here` is
+  refused, so that its notes are not written twice. The part that is put to the owner is always carried out in
+  the working conversation. `walk close --here` prints the first part whatever the setting.
+- An answer the harness cannot carry out falls back, and the setting says why: `aside` to `later`
+  where no copy can be started, `later` to `here` where the conversation cannot be read or is not
+  found where the harness keeps it.
+- A copy is started only where the owner told the harness to run `aside`: `setting jotting aside`
+  prints the entry to add, and the file it goes in. Run that way, `aside` prints nothing and never
+  fails. Each copy started is written down in `.state/asides.json` with the owner's words, and again
+  when it reports. At the review, each thing the owner said for which no copy reported is read back
+  from the conversation, as with `later`.
+- A copy runs with the project's hooks off and keeps no file of its own. It may run the engine's
+  commands and, for a review, read the project's files; it is told to change nothing else.
+- What a review reads back from its own conversation is recorded as read, as in *Earlier
+  conversations*, so `/vesta-backfill` does not read the same words again. Where the session is then
+  abandoned with no note written, they are offered again.
 
 ## Learn passes
 

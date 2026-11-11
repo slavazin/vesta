@@ -5,10 +5,11 @@ import os
 import posixpath
 
 from cli import args, manifest
-from kernel.errors import UsageError
+from kernel.errors import Refusal, UsageError
+from session import asides, history, review, settings, state
 from steps import sheet
 
-FLAGS = ("--short",)
+FLAGS = ("--short", "--here")
 OPTIONS = ("--ask", "--from", "--session")
 MANY = ("--paths", "--with")
 
@@ -62,6 +63,24 @@ def _checked(checkpoint, options):
                 raise UsageError("`%s %s` names no step of this walk; its steps are: %s" % (option, name, ", ".join(steps) or "none"))
 
 
+def _aside(context, walk, forwarded):
+    """What is printed in place of a walk's first part where a copy of the conversation carries it out."""
+    walk.file = None
+    option = forwarded + walk.session.resume
+    return [
+        "# Walk: %s%s" % (walk.checkpoint.id, " (short form)" if walk.short else ""), "", walk.session.heading] + walk.said + [
+        "",
+        "The first part of this walk is carried out aside, by a copy of this conversation: the setting `review` says so on this machine. "
+        "Its sheet is not printed here.",
+        "",
+        "**Do:** Run `%s aside walk %s%s`. It waits for the copy for up to a minute and a half, and prints what the copy wrote and the command for "
+        "the next part. Where the copy is still at work it says so: run the same command again, as often as it says. Run nothing else of Vesta's meanwhile."
+        % (sheet.command_line(context), walk.checkpoint.id, option),
+        "",
+        "To carry the part out here instead, run `walk %s --here%s`." % (walk.checkpoint.id, option),
+    ]
+
+
 def run(context, arguments):
     known = context.config.checkpoints
     named = [word for word in arguments[:1] if word in known]
@@ -87,6 +106,24 @@ def run(context, arguments):
     walk = sheet.Walk(checkpoint, session, paths, ask, requested=asked, short="--short" in options)
     walk.said = said + outside
     walk.matched = opening.paths(context, session, walk.paths)
-    for line in sheet.render(context, walk, options.get("--from")):
+    mine = checkpoint.id in context.known.get("walks-aside", ()) and session.status == state.OPEN
+    first = mine and "--from" not in options
+    copy = state.copy_of(session) if mine else None
+    inside = bool(context.environ.get(asides.TOKEN))
+    if copy is not None and not inside:
+        # While a copy holds the first part, no step of that part is printed here: its notes would be written twice.
+        following = sheet.following(context, walk)
+        names = checkpoint.short if "--short" in options else checkpoint.steps
+        start = options.get("--from")
+        later = following is not None and following.id in names and start in names and names.index(start) >= names.index(following.id)
+        if ("--here" in options or "--from" in options) and not later:
+            raise Refusal(
+                "a copy of the conversation is carrying the first part of this walk out for %s, started %s; carrying it out here as well would write "
+                "its notes twice. `aside walk %s%s` waits for the copy; `aside walk %s --stop%s` ends it, and this command then prints the part."
+                % (session.id, copy["started"], checkpoint.id, session.resume, checkpoint.id, session.resume), settings.RULE)
+    aside = first and "--here" not in options and not inside and (copy is not None or review.in_effect(context) == review.ASIDE)
+    forwarded = (" --short" if "--short" in options else "") + "".join(
+        " %s %s" % (name, " ".join(history.quoted(value) for value in options[name])) for name in MANY if options.get(name))
+    for line in (_aside(context, walk, forwarded) if aside else sheet.render(context, walk, options.get("--from"))):
         context.write(line)
     return 0

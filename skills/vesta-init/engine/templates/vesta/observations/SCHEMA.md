@@ -3,7 +3,7 @@
 An observation is one file under `open/`: a frontmatter block, a title, and a few lines. It records one
 thing a session noticed, with one anchor a reader can open. A session writes observations at its close
 through `obs add` and never reads earlier ones. The engine fills `uid`, `id`, `date`, `session`,
-`disposition` and `held`.
+`source`, `disposition` and `held`.
 
 ## Schema
 
@@ -26,6 +26,9 @@ fields:
   - name: session
     type: text
     required: true
+  - name: source
+    type: enum
+    values: [review, read-back]
   - name: via
     type: enum
     values: [owner-steer, should-have-loaded, off-map, trigger-fired, contradiction, jot]
@@ -74,6 +77,7 @@ written; every other field is fixed once written.
 | Field | Holds |
 |---|---|
 | `uid`, `id`, `date`, `session` | written by the engine |
+| `source` | written by the engine: `review` where the observation was written at the review of a task, `read-back` where it was written by reading back a conversation held before |
 | `via` | where the noticing came from: `owner-steer`, `should-have-loaded`, `off-map`, `trigger-fired`, `contradiction`, `jot`, `lens:<name>`, `row:<id>`, or `other(<what>)` |
 | `anchor` | one thing a reader can open: a path, a commit, a record label, a link, or `owner, YYYY-MM-DD`. A conversation is not an anchor |
 | `record` | the record concerned; filled when `via` is `should-have-loaded`, `trigger-fired` or `contradiction`, and only then |
@@ -86,9 +90,23 @@ written; every other field is fixed once written.
 
 ## Title and body
 
-The title names what was noticed, as a thing. The body states the instance in 600 characters or fewer. No
-line of the body opens with `Fix:`, `Proposal:` or `TODO:`: an observation that says what to do is a
-proposal in the wrong folder.
+These hold for every observation, whichever walk writes it and wherever the noticing came from.
+
+- The title names what was noticed, as a thing that happened: "The release script asks for the version
+  number three times". It is not an instruction and not a fix: "Pass the version between the stages"
+  is the title of a proposal.
+- The body states the instance in 600 characters or fewer: what happened, where, and what came of it.
+- Write both for a reader who was not there. Name each thing by its path, its id or its name; give a
+  date as `2026-03-14`; leave out "we", "currently" and "the above".
+- For a correction by the owner, the body states what the work did and what the owner asked for
+  instead. Quote the owner in two sentences at most, and only where the wording matters. Where only
+  the owner's words are in view, as when a conversation held before is read back, state no more of
+  the work than the words show. The title names what the work did, not the rule: "A client's name was
+  spelled the common way, not the way the client spells it", never "Spell a client's name as the
+  client does".
+- Quote nothing that reads as a password, a key or a token.
+- No line of the body opens with `Fix:`, `Proposal:` or `TODO:`: an observation that says what to do
+  is a proposal in the wrong folder.
 
 ## Closing dispositions
 
@@ -122,6 +140,7 @@ uid: a3f29c0e
 id: O-20260314-a3f29c0e
 date: 2026-03-14
 session: S-20260314-1c0e
+source: review
 via: lens:friction
 anchor: scripts/release.sh
 record: ""
@@ -146,6 +165,7 @@ uid: 5d07b1e4
 id: O-20260203-5d07b1e4
 date: 2026-02-03
 session: S-20260203-9a2f
+source: review
 via: owner-steer
 anchor: owner, 2026-02-03
 record: ""

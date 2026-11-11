@@ -73,7 +73,7 @@ written; every other field is fixed once written.
 | `kind` | `propose` | one of the kinds below |
 | `target` | `propose` | a store name for `add`; otherwise a record label, a trigger as `<label>/t1`, or a file path |
 | `drafted` | `propose` | the date |
-| `source` | `propose` | `pass-nnn`, a session id, or `init` |
+| `source` | `propose` | `pass-nnn`, a session id, `init`, or `owner` where the owner asked for the change directly |
 | `evidence` | `propose` | the observations the proposal rests on |
 | `sessions` | `propose` | how many separate sessions the evidence comes from; computed, never typed |
 | `bar` | the drafter | the evidence the proposal claims to have, in words |

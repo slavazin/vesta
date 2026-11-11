@@ -341,6 +341,13 @@ class CaptureSource(abc.ABC):
     def steers(self, session):
         raise NotImplementedError
 
+    def lines(self, session, context):
+        """What the source prints on a sheet: one line for each correction; empty where it holds none."""
+        return [
+            "- %s %s%s (from %s)" % (steer.get("at", ""), steer.get("text", ""), " (anchor: %s)" % steer["anchor"] if steer.get("anchor") else "", self.id)
+            for steer in self.steers(session)
+        ]
+
 
 class HistoryError(Exception):
     """A place earlier conversations are kept that could not be read, with the reason."""
@@ -412,3 +419,91 @@ class History(abc.ABC):
     def turns(self, conversation):
         """What was said, in order. Raises HistoryError where the conversation cannot be read."""
         raise NotImplementedError
+
+
+class Harness(abc.ABC):
+    """The program an agent runs in. Built from the environment a command was started in; a member
+    reads that and nothing else, and never writes.
+
+    `name` is what the owner is told it is; `residue` what the engine cannot do in it. `history` is
+    the id of the history that reads the conversations it keeps, or an empty text. `forks`: it can
+    start a copy of a running conversation that does one thing and ends.
+    """
+
+    id = ""
+    name = ""
+    residue = ""
+    history = ""
+    forks = False
+    # Not so for the member that stands for every program the engine knows nothing of.
+    known = True
+    # Set in the environment of a copy of a conversation, to the name of the conversation it is a copy
+    # of: what a copy reads back and notes belongs to that one, whatever the harness calls the copy.
+    ORIGINAL = "VESTA_CONVERSATION"
+
+    def __init__(self, environ):
+        self.environ = environ
+
+    @abc.abstractmethod
+    def here(self):
+        """Say whether this command was started from inside it."""
+        raise NotImplementedError
+
+    def conversation(self):
+        """The name its history gives the conversation this command was started from, or an empty text."""
+        return ""
+
+    def fork(self, conversation, prompt, allowed, reads=False):
+        """The command, as a list of arguments, that starts a copy of a conversation, gives it one
+        instruction and ends. `allowed` are the commands the copy may run, each as the text it opens
+        with; `reads` lets it read the project's files as well."""
+        raise NotImplementedError
+
+    def hook(self, command):
+        """(the file the owner adds an entry to, the entry's text) for having `command` run each
+        time the owner says something."""
+        raise NotImplementedError
+
+    def said(self, sent):
+        """(the conversation, the owner's words) from what the harness sends a hook's command on standard input."""
+        raise NotImplementedError
+
+    def adopt(self, sent):
+        """The environment a command would have been started in by this harness, where what was sent
+        on standard input is this harness's own and names a conversation; else None."""
+        return None
+
+
+class Setting(abc.ABC):
+    """One thing that differs by the person or the machine and never by the project: its answer is
+    kept on this machine, outside what is committed.
+
+    `asks` is the question in one line; `options` every answer as (value, what it means in one line).
+    `default` is in effect while nothing was chosen and nothing found. `put`: a sheet puts the
+    question to the owner while it is not chosen and more than one answer can take effect here.
+    """
+
+    id = ""
+    asks = ""
+    options = ()
+    default = ""
+    put = False
+
+    def __init__(self, context):
+        self.context = context
+
+    def found(self, context):
+        """The answer the engine can tell without asking, or an empty text."""
+        return ""
+
+    def effect(self, context, value):
+        """(the answer in effect where `value` is the one chosen or found, why it differs or an empty text)."""
+        return value, ""
+
+    def turns_on(self, value):
+        """The members an answer in effect adds for this person: {table: [ids]}."""
+        return {}
+
+    def after(self, context, value):
+        """The lines to print once an answer was chosen: what else the owner has to do for it."""
+        return []

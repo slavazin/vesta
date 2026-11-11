@@ -8,7 +8,7 @@ description: Read back conversations held before Vesta was in use, or held witho
 ## When to run
 
 When the owner asks: after `/vesta-init`, or later, when tasks were finished without `/vesta-insight`.
-Never from inside a task. It needs Vesta set up in the project and engine 0.2.0 or later.
+Never from inside a task. It needs Vesta set up in the project and engine 0.3.0 or later.
 
 `$ARGUMENTS` may hold any of these, in any order, or nothing:
 
@@ -24,7 +24,8 @@ What the arguments leave open is asked of the owner, one question at a time. Nev
 - This skill writes notes and nothing else. Draft no proposal, run no `apply`, and write no decision:
   what becomes of a note is decided in `/vesta-learn`, by the owner.
 - Open no conversation before the owner has said yes in step 5.
-- Quote the owner in two sentences at most. Quote nothing that reads as a password, a key or a token.
+- Write each note as the sheet's last section prints: it holds the rules for a note's title and body,
+  the same ones a task's review is held to.
 - Tell the owner about Vesta in plain words: decision, note, proposal, approve, reject. Name a note by
   its title. Leave out the words the sheet uses for its own parts.
 - Where a command prints a line that opens `Note:`, tell the owner what it says, in plain words. Name a
@@ -45,22 +46,12 @@ What the arguments leave open is asked of the owner, one question at a time. Nev
 1. **Find the project root:** the nearest folder at or above the working directory that holds
    `vesta/vesta.yml`. Where there is none, tell the owner to run `/vesta-init` and stop. Below, `vesta`
    stands for `python3 "<that root>/vesta/.engine"`; use `python` where `python3` is not found. Run
-   `vesta version`. Where the engine is older than 0.2.0, tell the owner to run `/vesta-init upgrade`
+   `vesta version`. Where the engine is older than 0.3.0, tell the owner to run `/vesta-init upgrade`
    and stop.
-2. **Settle where to read from.** The engine knows the files of Claude Code and no other harness.
-   - A path was given: run `vesta history sources --in "<that path>"`. It looks at that path and
-     nowhere else, and says what each place finds there: `claude-code` for files Claude Code wrote,
-     `file` for saved text. Use the place that fits what the owner said the path holds; every command
-     below takes it and `--in "<that path>"`. A path that is not absolute is read from the project root.
-   - No path, and you are running in Claude Code: ask whether to look in the folder Claude Code keeps
-     for this project. On a yes, run `vesta history`: it reads the names and dates of files there and
-     opens none. Tell the owner the folder and how many files it holds. Where it found none, tell the
-     owner where it looked and what it cannot find, in the words it printed, and ask for a path: saved
-     text, or the folder Claude Code kept the conversations under, where the project was moved.
-   - No path, and you are running in another harness: say that the engine cannot find this harness's
-     conversations, and ask for the path of ones saved as text. Don't run `vesta history` to look for
-     Claude Code's files unless the owner says those are wanted.
-   - No path comes: stop. There is nothing to read. Don't look anywhere the engine did not name.
+2. **Settle where to read from.** Run `vesta history where`, adding `--in "<that path>"` where a path
+   was given. It opens and lists nothing: it prints what to ask the owner and what to run next, for
+   the harness you are running in and no other. Do what it prints. Where it ends with no place to
+   read from, stop.
 3. **Settle how many.** Where `last <n>` was not given, ask how many of the latest to read: 5 unless
    the owner says otherwise, 20 at the most in one run. Some files hold nothing; step 6 shows what
    there is.
@@ -74,13 +65,12 @@ What the arguments leave open is asked of the owner, one question at a time. Nev
    owner's words go into notes under `vesta/observations/`, which is part of the project and is
    committed with it. Nothing checks a quote for a secret: the notes are plain files the owner can read
    before committing. Wait for a yes. On a no, stop; nothing was opened.
-6. **List them, then read each.** Run `vesta history list <place> --last <n>`; in Claude Code with no
-   path given, ask for one more than n, 20 at the most, because the conversation you are in now is
-   among them. It lists, newest first, the ones that hold something not yet read back, and says what
-   it could not read, passed over, or found left open by an earlier run; tell the owner that. Where
-   it lists none, say so and stop. Leave out the conversation you are in now: the newest, where it
-   opens with the words this conversation began with. Show the owner the rest, each in a line with
-   its date and how it opens, and leave out any they name.
+6. **List them, then read each.** Run `vesta history list <place> --last <n>`. It lists, newest
+   first, the ones that hold something not yet read back, and says what it could not read, passed
+   over, left out, or found left open by an earlier run; tell the owner that. Where it lists none,
+   say so and stop. Where it does not say that it left out the conversation you are in now, leave
+   that one out yourself: the newest, where it opens with the words this conversation began with.
+   Show the owner the rest, each in a line with its date and how it opens, and leave out any they name.
    Then, from the bottom of the list up, so that the oldest is read first, for each: run
    `vesta walk backfill --source <place> --conversation <name>`, adding `--corrections` where step 4
    settled on corrections only, and carry out the sheet from top to bottom. Each section's **Do** line

@@ -13,6 +13,8 @@ from stores import similar
 from stores.filestore import RECORD_DEPTH
 
 INIT = "init"
+# Asked for by the owner directly, outside a task and outside a learn pass.
+OWNER = "owner"
 
 SECTIONS = (
     ("Why", "the shape the evidence shares, stated without the particular files; two to five sentences"),
@@ -40,8 +42,8 @@ def _evidence(context, text):
 def _source(context, given):
     if given:
         given = given.strip()
-        if not (given == INIT or passes.NUMBERED.match(given) and not given.endswith(".md") or state.ID.match(given)):
-            raise UsageError("`--source %s` is none of: a session id, `pass-<n>` as a learn pass names itself, or `%s`" % (given, INIT))
+        if not (given in (INIT, OWNER) or passes.NUMBERED.match(given) and not given.endswith(".md") or state.ID.match(given)):
+            raise UsageError("`--source %s` is none of: a session id, `pass-<n>` as a learn pass names itself, `%s` or `%s`" % (given, INIT, OWNER))
         named = state.read(context.tree, given) if state.ID.match(given) else None
         if named is not None and named.origin is not None:
             raise Refusal(
@@ -82,6 +84,13 @@ def covered(context, kind, target, draft_text, draft_path):
 
 
 def run(context, arguments):
+    begin(context, arguments, context.write)
+    return 0
+
+
+def begin(context, arguments, write, body=None):
+    """Start a proposal and say what to fill. `body` gives the whole text below the frontmatter, for a
+    caller that has nothing left to fill. Returns (the label, the path of its file)."""
     words, options = args.split(arguments, options=("--target", "--evidence", "--source", "--draft"), takes=True)
     if len(words) != 1 or "--target" not in options:
         raise UsageError("`propose` takes a kind and a target, as `propose add --target <store>`; the kinds are: %s" % (", ".join(context.config.kinds) or "none"))
@@ -101,10 +110,11 @@ def run(context, arguments):
         pending.SOURCE: source, pending.EVIDENCE: evidence, pending.SESSIONS: proposals.sessions_of(context, evidence),
         "bar": "", pending.COST: cost, store.type.life_field(OUTCOME): "",
     }
-    body = "# %s what would change, in one line>\n" % blocks.FILL
-    for name, holds in SECTIONS:
-        body += "\n## %s\n%s %s>\n" % (name, blocks.FILL, holds)
-    body += "\n## %s\n%s\n" % (proposals.CHANGE, kind.scaffold(target, context, label))
+    if body is None:
+        body = "# %s what would change, in one line>\n" % blocks.FILL
+        for name, holds in SECTIONS:
+            body += "\n## %s\n%s %s>\n" % (name, blocks.FILL, holds)
+        body += "\n## %s\n%s\n" % (proposals.CHANGE, kind.scaffold(target, context, label))
     record = Record(store.name, store.path_for(label), dict((name, value) for name, value in fields.items() if store.type.field(name)), body)
     overlay = trees.Overlay(context.tree)
     overlay.write(record.path, store.text(record))
@@ -122,16 +132,16 @@ def run(context, arguments):
     elif "--draft" in options:
         raise UsageError("a `%s` proposal has no draft" % kind.id)
     overlay.commit()
-    context.write("Started %s: %s %s." % (label, kind.id, target))
-    context.write()
-    context.write("Fill these, replacing every `%s …>` placeholder:" % blocks.FILL)
-    context.write("- %s — the title and the sections; how to write one is in %s/SCHEMA.md" % (record.path, store.path))
+    write("Started %s: %s %s." % (label, kind.id, target))
+    write()
+    write("Fill these, replacing every `%s …>` placeholder:" % blocks.FILL)
+    write("- %s — the title and the sections; how to write one is in %s/SCHEMA.md" % (record.path, store.path))
     if kind.draft:
-        context.write("- %s — the full text of the record; leave `%s` and `%s` as `%s`" % (draft_path, UID, LABEL, ids.NEW))
-    context.write()
-    context.write("Evidence: %d observation%s from %d session%s. Standing cost: %s." % (
+        write("- %s — the full text of the record; leave `%s` and `%s` as `%s`" % (draft_path, UID, LABEL, ids.NEW))
+    write()
+    write("Evidence: %d observation%s from %d session%s. Standing cost: %s." % (
         len(evidence), "" if len(evidence) == 1 else "s", fields[pending.SESSIONS], "" if fields[pending.SESSIONS] == 1 else "s", cost))
-    context.write("Then run `proposals %s`: it says what is still wrong with the files and which records may already cover it." % label)
+    write("Then run `proposals %s`: it says what is still wrong with the files and which records may already cover it." % label)
     for line in covered(context, kind, target, draft_text, draft_path) if kind.draft else []:
-        context.write(line)
-    return 0
+        write(line)
+    return label, record.path

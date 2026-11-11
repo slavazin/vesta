@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from kernel.errors import Refusal, UsageError
 from model.abstractions import Opening
-from session import history, state
+from session import harness, history, state
 
 CORRECTIONS = "corrections"
 
@@ -31,6 +31,10 @@ class EarlierOpening(Opening):
             )
         found = history.member(context, source, given)
         conversation = history.find(found, ref)
+        running = harness.current(context)
+        if running is not None and running.history == found.id and not given and running.conversation() == conversation.ref:
+            raise Refusal("`%s` is the conversation this command was started from: it is still being held, and it is read at its own "
+                          "review, by `/vesta-insight`. Nothing was opened." % conversation.ref, history.RULE)
         mark = history.key(found, conversation)
         with history.lock(context.tree) as held:
             if not held:

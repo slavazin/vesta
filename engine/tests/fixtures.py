@@ -145,6 +145,8 @@ class Project(object):
         self.temp = tempfile.TemporaryDirectory()
         self.root = os.path.realpath(self.temp.name)
         self.clock = FixedClock()
+        # What the commands of this project are told of where they were started: nothing, unless a test says.
+        self.environ = {}
         if init:
             self.config = None
             code, out, err = self.run("init")
@@ -209,7 +211,7 @@ class Project(object):
         self.write("vesta/notes/SCHEMA.md", NOTES_SCHEMA)
 
     def context(self, out=None):
-        return build.context(self.root, out if out is not None else io.StringIO(), self.clock)
+        return build.context(self.root, out if out is not None else io.StringIO(), self.clock, environ=self.environ)
 
     def store(self, name="decisions"):
         return self.context().stores.get(name)
@@ -230,6 +232,7 @@ class Project(object):
     def run(self, *argv, **options):
         """Run a command in-process. Returns (exit code, standard output, standard error)."""
         out, err = io.StringIO(), io.StringIO()
+        options.setdefault("environ", self.environ)
         code = main.main(list(argv), root=self.root, clock=self.clock, out=out, err=err, **options)
         return code, out.getvalue(), err.getvalue()
 

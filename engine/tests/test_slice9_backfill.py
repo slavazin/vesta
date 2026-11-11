@@ -595,7 +595,7 @@ class BackfillWalk(unittest.TestCase):
             out = read_back(project, "long")
             self.assertLess(len(out), 24000)
             self.assertIn("There are 60, too many to list here. `index` prints each", out)
-            self.assertIn("**Do:** Read the Fields table", out)
+            self.assertIn("**Do:** Write every prepared observation", out)
             self.assertEqual(project.run("index")[0], 0)
 
     def test_a_copy_of_a_conversation_opened_while_the_first_is_being_read_is_not_read_twice(self):
@@ -1079,9 +1079,8 @@ class BackfillSkill(unittest.TestCase):
             project.write("saved/talk.md", "Me: some words.")
             for said_, arguments in (
                 ("`vesta version`", ("version",)),
-                ("`vesta history`", ("history",)),
+                ("`vesta history where`", ("history", "where")),
                 ("`vesta history list <place> --last <n>`", ("history", "list", "claude-code", "--last", "20")),
-                ('`vesta history sources --in "<that path>"`', ("history", "sources", "--in", "saved")),
                 ('`--in "<that path>"`', ("history", "list", "file", "--in", "saved")),
                 ("`vesta history forget <place> <name>`", ("history", "forget", "claude-code", "one")),
                 ("`vesta walk backfill --source <place> --conversation <name>`", ("walk", "backfill", "--source", "claude-code", "--conversation", "one", "--corrections")),
@@ -1091,29 +1090,27 @@ class BackfillSkill(unittest.TestCase):
                 self.assertEqual(code, 0, (arguments, err))
             self.assertIn("`--corrections`", self.text)
             # Nothing outside the project is looked at before a question, and the list, which opens files, comes after the yes.
-            self.assertLess(self.text.index("ask whether to look in the folder"), self.text.index("On a yes, run `vesta history`"))
+            self.assertLess(self.text.index("`vesta history where`"), self.text.index("Wait for a yes"))
             self.assertLess(self.text.index("Wait for a yes"), self.text.index("`vesta history list <place> --last <n>`"))
 
     def test_the_version_the_skill_asks_for_is_one_this_engine_meets(self):
         from kernel import version
-        self.assertIn("engine 0.2.0 or later", self.text)
+        self.assertIn("engine 0.3.0 or later", self.text)
         self.assertGreaterEqual(version.parse(version.ENGINE), (0, 2, 0))
 
     def test_the_skill_keeps_its_forks_and_its_limits(self):
         for wanted in (
             "Never settle one of these by guessing",
-            "ask whether to look in the folder Claude Code keeps",
-            "ask for one more than n",
+            "It opens and lists nothing",
             "tell them first that its earlier notes stay",
             "ask how many of the latest to read",
             "Where `corrections` was not given, ask",
-            "you are running in another harness",
+            "for the harness you are running in and no other",
             "Where it lists none, say so and stop",
-            "Leave out the conversation you are in now",
+            "leave that one out yourself",
             "Nothing checks a quote for a secret",
             "Open no conversation before the owner has said yes in step 5",
             "This skill writes notes and nothing else",
-            "The engine knows the files of Claude Code and no other harness",
             "20 at the most in one run",
             "Wait for a yes",
             "`/vesta-learn`",
@@ -1123,7 +1120,7 @@ class BackfillSkill(unittest.TestCase):
 
     def test_the_readme_tells_a_new_user_about_it_and_what_it_keeps(self):
         readme = " ".join(support.read(os.path.join(support.REPO, "README.md")).split())
-        for wanted in ("/vesta-backfill", "asks before it opens one", "`vesta-backfill`) into", "nothing checks that it did"):
+        for wanted in ("/vesta-backfill", "asks before it opens one", "`vesta-backfill`, `vesta-config`) into", "nothing checks that it did"):
             self.assertIn(wanted, readme)
 
 

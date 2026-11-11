@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 
 from kernel import ids
+from kernel import markdown
 from kernel import tree as trees
 from kernel.errors import Refusal, UsageError
 from matchers import probes
@@ -22,6 +23,10 @@ TITLE, BODY = "title", "body"
 DATE, SESSION, HELD = "date", "session", "held"
 RECHECK = "recheck"
 VIA, STEER_KIND = "via", "steer-kind"
+# Which walk wrote an observation, where the store's records have a field for it that takes these values.
+SOURCE, REVIEW, READ_BACK = "source", "review", "read-back"
+# The sections of a store's SCHEMA file that say how every observation is written, whichever walk asks for one.
+CARD = ("Title and body", "Do and Don't")
 PASS_FOLDER = "pass-%03d"
 
 
@@ -60,9 +65,33 @@ def usable(store):
     return store
 
 
+def sourced(store):
+    """Say whether the store's records say which walk wrote them, in the values the engine writes."""
+    field = store.type.field(SOURCE)
+    return field is not None and field.type == "enum" and all(value in (field.values or ()) for value in (REVIEW, READ_BACK))
+
+
 def supplied(store):
     """The fields the engine fills, which an item sent to `obs add` therefore leaves out."""
-    return (UID, LABEL, DATE, SESSION, store.type.life_field(DISPOSITION), HELD)
+    return (UID, LABEL, DATE, SESSION, store.type.life_field(DISPOSITION), HELD) + ((SOURCE,) if sourced(store) else ())
+
+
+def card(context, store):
+    """The lines of the store's SCHEMA file that say how an observation is written; then the names
+    of the sections it lacks."""
+    found, lacking = [], []
+    try:
+        document = markdown.Document(context.tree.read(schema_path(store)))
+    except (OSError, UnicodeDecodeError, ValueError):
+        return [], list(CARD)
+    for name in CARD:
+        section = document.section(name)
+        text = document.text_of(section).strip("\n") if section is not None else ""
+        if not text.strip():
+            lacking.append(name)
+            continue
+        found.extend(["### %s" % name, ""] + text.split("\n") + [""])
+    return found, lacking
 
 
 def asked(store):
@@ -141,6 +170,8 @@ def _record(context, store, session, item, taken):
     fields = dict((name, item[name].strip() if isinstance(item.get(name, ""), str) else item[name]) for name in keys[2:] if name in item)
     fields.update({UID: uid, LABEL: label, DATE: context.clock.today(), SESSION: session.id, HELD: []})
     fields[store.type.life_field(DISPOSITION)] = OPEN
+    if sourced(store):
+        fields[SOURCE] = READ_BACK if session.origin is not None else REVIEW
     for field in store.type.fields:
         value = fields.get(field.name)
         if field.type == "ref" and value:

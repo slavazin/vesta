@@ -1,5 +1,5 @@
 """The engine's version and the highest folder schema it reads."""
-ENGINE = "0.2.0"
+ENGINE = "0.3.0"
 SCHEMA = 1
 
 

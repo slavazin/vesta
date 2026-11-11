@@ -28,6 +28,8 @@ class Walk(object):
         self.short = short
         self.file = None
         self.said = []
+        # The settings whose question this printing has already put to the owner.
+        self.put = []
 
 
 def _title(context, walk):
@@ -65,6 +67,14 @@ def part(steps, start):
     while last < len(steps) and not (steps[last].live and not (steps[last].joins and steps[last - 1].live)):
         last += 1
     return steps[first:last], (steps[last] if last < len(steps) else None)
+
+
+def following(context, walk):
+    """The step the second part of a walk starts at, or None where it has one part."""
+    walk.file = walks.read(context.tree, walk.checkpoint.walk)
+    context.walk = walk
+    steps, _ = steps_of(context, walk)
+    return part(steps, None)[1]
 
 
 def command_line(context):

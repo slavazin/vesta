@@ -49,6 +49,18 @@ def member(context, name, given=""):
     return cls(context.root, given or "")
 
 
+def unfound(context, name, ref):
+    """Why a conversation is not found in a history that finds its own place, or an empty text where it is.
+    Opens no file."""
+    if name not in sources(context):
+        return "this engine reads no such place"
+    try:
+        found = context.member(TABLE, name)(context.root, "").conversations()
+    except HistoryError as error:
+        return str(error)
+    return "" if any(one.ref == ref for one in found) else "no file of that name is there"
+
+
 def listed(history):
     """(the conversations a command can name, oldest first; what was passed over, in words).
     Raises Refusal where the place cannot be read."""
@@ -142,12 +154,18 @@ def marks_read(tree, readings):
 
 
 def being_read(tree, readings, name):
-    """The open session that is reading a conversation, or None."""
+    """The open session that was opened to read a conversation back, or None. A task's session that
+    read its own conversation at its review is not one: the walk that reads back never goes on in it."""
     for entry in readings:
         session = _session(tree, entry) if entry["conversation"] == name else None
-        if session is not None and session.status == state.OPEN:
+        if session is not None and session.status == state.OPEN and session.origin is not None:
             return session
     return None
+
+
+def held(readings, session, name):
+    """The marks of what one session read of one conversation."""
+    return [mark for entry in readings if entry["session"] == session and entry["conversation"] == name for mark in entry["marks"]]
 
 
 def last_read(tree, readings, name):

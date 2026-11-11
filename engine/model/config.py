@@ -46,6 +46,89 @@ SHAPE = {
 }
 
 
+# The keys an owner may ask to have changed without reading this file, each with what it does, in the
+# order they are listed. `*` stands for each name the project has under that key.
+MEANS = (
+    ("engagement", "how much the agent asks, tells and offers"),
+    ("owner", "the name recorded when a proposal is approved; empty records none"),
+    ("reminders.learn.enabled", "whether the start of a task says that notes have built up and `/vesta-learn` is due"),
+    ("reminders.learn.open-observations", "how many open notes it takes for that reminder; 0 leaves this count out"),
+    ("reminders.learn.sessions-since-pass", "how many reviewed tasks since the last `/vesta-learn` it takes for that reminder; 0 leaves this count out"),
+    ("reminders.pending-proposals.enabled", "whether the start of a task lists the proposals waiting for a decision"),
+    ("reminders.unreviewed.enabled", "whether the start of a task says that tasks ended without a review"),
+    ("reminders.unreviewed.sessions", "how many such tasks it takes for that reminder"),
+    ("recall.long-index-at", "the number of records at which the start of a task says their list is long"),
+    ("adapters.changes", "how the files a task changed are found: `auto`, `git` or `mtime`"),
+    ("changes.ignore", "the folder names left out when changed files are looked for"),
+    ("stores.*.label.prefix", "the letters a record's label opens with; changing it renames every record of the store"),
+    ("stores.*.label.digits", "the fewest digits of the number in a label; 0 names a record by its date instead"),
+    ("checkpoints.*.steps", "the steps of the walk, in order; one left out is no longer printed"),
+    ("checkpoints.*.short", "the steps of the walk's short form"),
+)
+
+
+def offered(data):
+    """[(dotted key, what it does, the shape of its value)] for every key of MEANS as this project's file has it."""
+    found = []
+    for pattern, means in MEANS:
+        parts = pattern.split(".")
+        names = [parts]
+        if "*" in parts:
+            at = parts.index("*")
+            names = [parts[:at] + [name] + parts[at + 1:] for name, entry in _mapping(data.get(parts[0])).items() if isinstance(entry, dict)]
+        for path in names:
+            shape = SHAPE
+            for part in path:
+                shape = shape[1] if isinstance(shape, tuple) and shape and shape[0] == "each" else shape[part]
+            found.append((".".join(path), means, shape))
+    return found
+
+
+def held(data, dotted):
+    """(the value a dotted key holds in the file, whether the file names it)."""
+    here = data
+    for part in dotted.split("."):
+        if not isinstance(here, dict) or part not in here:
+            return None, False
+        here = here[part]
+    return here, True
+
+
+def takes(shape):
+    """What a value of that shape is, in words."""
+    return _describe(shape)
+
+
+def shown(value):
+    return _show(value) if value != "" else "(empty)"
+
+
+def parsed(shape, text):
+    """The value a text names for a key of that shape. Raises ValueError with what it must be."""
+    text = text.strip()
+    if shape == INT:
+        if not re.match(r"[0-9]{1,9}\Z", text):
+            raise ValueError(INT)
+        return int(text)
+    if shape == BOOL:
+        if text not in ("true", "false"):
+            raise ValueError(BOOL)
+        return text == "true"
+    if isinstance(shape, list):
+        inner = text[1:-1] if text.startswith("[") and text.endswith("]") else text
+        items = [item.strip() for item in inner.split(",") if item.strip()]
+        if any(not re.match(r"[A-Za-z0-9_.@/-]+\Z", item) for item in items):
+            raise ValueError("a list of names with commas between them, as `a, b, c`")
+        return items
+    if isinstance(shape, tuple):
+        if text not in shape:
+            raise ValueError(_describe(shape))
+        return text
+    if "\n" in text or len(text) > 200 or text == "-":
+        raise ValueError("one line of text, 200 characters at the most, and not `-` alone")
+    return text
+
+
 class StoreConfig(object):
     """One entry of `stores`."""
 

@@ -32,6 +32,9 @@ COMMANDS = {
     "pass": "cli.commands.passes",
     "upgrade": "cli.commands.upgrade",
     "history": "cli.commands.history",
+    "setting": "cli.commands.setting",
+    "aside": "cli.commands.aside",
+    "config": "cli.commands.config",
 }
 
 SUMMARIES = {
@@ -42,7 +45,7 @@ SUMMARIES = {
     "scopes": "<path>…  the records whose paths cover each path",
     "init": "[--owner <name or ->] [--engagement <level>] [--pointer-file <path>]  set the folder up",
     "doctor": "what the engine runs on and what it found in place",
-    "walk": "<checkpoint> [--ask <text or ->] [--paths <path>…] [--continue|--new|--parallel] [--short] [--with <step>] [--from <step>] [--session <id>]  print a part of a walk sheet",
+    "walk": "<checkpoint> [--ask <text or ->] [--paths <path>…] [--continue|--new|--parallel] [--short] [--here] [--with <step>] [--from <step>] [--session <id>]  print a part of a walk sheet",
     "load": "<id>… [--by index|trigger] [--session <id>]  print records in full and add them to the session",
     "mark": "<id>=<mark>… [--session <id>]  say what came of a loaded record: applied, not-applicable, should-have-loaded",
     "jot": "[--steer] [--anchor <a>] [--session <id>] <text or ->  note something in the session",
@@ -56,7 +59,10 @@ SUMMARIES = {
     "relabel": "<store> [--one <id>]  rename a store's records to its configured label form",
     "obs": "add | list [--open|--pass <n>] | dispose <id> --as <text or ->  [--store <name>] [--session <id>]  write observations from a JSON array on standard input, print them, or set one aside during a learn pass",
     "upgrade": "run from vesta/.engine.next: replace the engine in place with this newer copy, and bring the shipped files up to date",
-    "history": "[sources] | list <source> [--last <n>] | turns <source> <conversation> [--at <n>] [--session <id>] | forget <source> <conversation>  [--in <path>]  where earlier conversations are kept, the ones found, or what was said in one",
+    "history": "[sources] | where | list <source> [--last <n>] | turns <source> <conversation> [--at <n>] [--session <id>] | forget <source> <conversation>  [--in <path>]  where earlier conversations are kept, what to ask the owner before looking, the ones found, or what was said in one",
+    "setting": "[<name> [<answer> | --clear]]  what is chosen on this machine and not for the project: every setting, one with its answers, or an answer kept",
+    "aside": "[steer | nothing | walk <checkpoint> [--short] [--paths <path>…] [--with <step>…] [--stop] [--session <id>]]  with no word, what the harness runs each time the owner says something: it starts a copy of the conversation that notes a correction; with `steer` or `nothing`, how that copy reports back; with `walk`, a copy carries out the first part of a walk and this waits for it, or `--stop` ends it",
+    "config": "[set <key> <value>]  what can be changed about how Vesta behaves; with `set`, a change to the project's configuration drafted as a proposal for the owner",
     "pass": "seal [--hold <id>,…] [--note <file or ->]  end the open learn pass: archive what it read and write its note",
 }
 
@@ -133,6 +139,7 @@ CHANGES = {
 AUTO = ("git", "mtime")
 CAPTURE = {
     "jot": "adapters.jot",
+    "conversation": "session.said",
 }
 
 # How a walk opens, by checkpoint id. A checkpoint with no line of its own opens as DEFAULT_OPENING does.
@@ -156,15 +163,37 @@ CHECKPOINTS = {
     "backfill": {"walk": "walks/backfill.md", "steps": ["earlier", "mint"]},
 }
 
+# The programs an agent may run in, in the order they are looked for. The last assumes nothing.
+HARNESSES = {
+    "claude-code": "adapters.in_claude_code",
+    "other": "adapters.in_other",
+}
+
+# What is chosen on a machine and not for the project.
+SETTINGS = {
+    "harness": "session.harness",
+    "jotting": "session.jotting",
+    "review": "session.review",
+}
+
+# The commands a harness runs by itself where they are given no word: such a run prints nothing and never fails.
+SILENT = ("aside",)
+
+# The walks whose first part only reads and writes notes, so that a copy of the conversation may carry it out.
+ASIDE = ("close",)
+
 TABLES = {
     "steps": STEPS, "kinds": KINDS, "checks": CHECKS, "changes": CHANGES, "capture": CAPTURE,
     "matchers": MATCHERS, "probes": PROBES, "openings": OPENINGS, "histories": HISTORIES,
+    "harnesses": HARNESSES, "settings": SETTINGS,
 }
 
 
 def known():
     """The ids each table holds, for the `config` check."""
-    return dict((name, sorted(table)) for name, table in TABLES.items())
+    found = dict((name, sorted(table)) for name, table in TABLES.items())
+    found["walks-aside"] = list(ASIDE)
+    return found
 
 
 def member(table, name):

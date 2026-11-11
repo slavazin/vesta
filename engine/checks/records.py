@@ -67,7 +67,10 @@ class RecordsCheck(Check):
                 "the label `%s` is not in the form this store's records take, as `%s`" % (record.label, self._example(store)),
             ))
         try:
-            canonical = yamlsubset.write(store.type.front(record)) == record.front
+            front = store.type.front(record)
+            # A field the schema gained after the record was written, and does not require, may be absent.
+            older = dict((name, value) for name, value in front.items() if name in record.fields or getattr(store.type.field(name), "required", False))
+            canonical = record.front in (yamlsubset.write(front), yamlsubset.write(older))
         except ValueError:
             canonical = True
         if not canonical and not any(f.severity == ERROR for f in found):

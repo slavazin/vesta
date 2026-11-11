@@ -35,7 +35,7 @@ def stores_over(tree, config, clock):
     return stores
 
 
-def context(root, out, clock=None, tree=None):
+def context(root, out, clock=None, tree=None, environ=None):
     """The context for a project root. Raises UsageError where the folder has no readable configuration."""
     tree = tree if tree is not None else DiskTree(root)
     clock = clock if clock is not None else Clock()
@@ -50,7 +50,8 @@ def context(root, out, clock=None, tree=None):
         # A project that names no such walk has the shipped one while its file is there; deleting the file removes it.
         if tree.is_file(configuration.HOME + "/" + entry["walk"]):
             config.checkpoints.setdefault(name, configuration.Checkpoint(name, entry))
-    return Context(root, tree, config, stores_over(tree, config, clock), clock, manifest.known(), out, text, shipped(), Services())
+    return Context(root, tree, config, stores_over(tree, config, clock), clock, manifest.known(), out, text, shipped(), Services(),
+                   os.environ if environ is None else environ)
 
 
 class Services(object):

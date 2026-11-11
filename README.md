@@ -4,7 +4,7 @@ Vesta keeps what a project has decided as plain text files beside the project, a
 decisions that bear on a task when the task starts. Every lasting change to those files is shown to a
 person, who says yes or no.
 
-It is a set of five agent skills and a small Python program with no dependencies. Everything it knows
+It is a set of six agent skills and a small Python program with no dependencies. Everything it knows
 about a project lives in one folder, `vesta/`, inside that project.
 
 **Status: experimental.** See *Status* at the end for what is untried.
@@ -22,7 +22,8 @@ Three moments, and one habit.
 The habit: when shown a proposal, answer yes or no by its number. You can stop reading here and use it.
 
 Once, at the start, there is a fourth: `/vesta-backfill` reads conversations you had with the agent
-before Vesta was set up, so that it does not begin with nothing.
+before Vesta was set up, so that it does not begin with nothing. And whenever you want Vesta itself
+to behave differently, `/vesta-config` changes it by asking; you never edit a configuration file.
 
 ## Who it suits
 
@@ -47,9 +48,9 @@ looks for the files a task changed, it skips folders named `.git`, `node_modules
 ## Install
 
 1. Get a release: download the latest one from this repository's releases page and unpack it, or clone
-   the repository and check out its tag. Each release is tagged `v` and the engine's version, `v0.2.0`.
-2. Copy the five folders under its `skills/` (`vesta-init`, `vesta-hook`, `vesta-insight`,
-   `vesta-learn`, `vesta-backfill`) into `.claude/skills/` of your project. From the unpacked repository:
+   the repository and check out its tag. Each release is tagged `v` and the engine's version, `v0.3.0`.
+2. Copy the six folders under its `skills/` (`vesta-init`, `vesta-hook`, `vesta-insight`,
+   `vesta-learn`, `vesta-backfill`, `vesta-config`) into `.claude/skills/` of your project. From the unpacked repository:
    - macOS and Linux: `mkdir -p "<your project>/.claude/skills" && cp -R skills/vesta-* "<your project>/.claude/skills/"`
    - Windows PowerShell: `New-Item -ItemType Directory -Force "<your project>\.claude\skills"; Copy-Item -Recurse skills\vesta-* "<your project>\.claude\skills\"`
 
@@ -97,8 +98,10 @@ remember; with the block, the agent runs it for you.
 
 ### Correct the agent mid-task
 
-Just say it. The agent notes your words at once, and they become a note at the end of the task. You
-need no command.
+Just say it. Your words become a note at the end of the task. You need no command.
+
+By default the agent notes them at once, which takes a moment of the work each time. *Keep Vesta's
+own work out of the task*, below, has two ways around that.
 
 ### Finish a task
 
@@ -139,8 +142,34 @@ project folder:
 
 ### Change how it behaves
 
-Ask the agent in plain words: to be quieter or more proactive, to remind sooner, later or never, to
-name decisions differently. Each such change comes back as a proposal to approve.
+Type `/vesta-config` and say what you want in plain words: quieter or more proactive, reminders
+sooner, later or never, decisions named differently. Type it alone to be told what can be changed and
+how each thing stands. A change for the whole project comes back as a proposal to approve. A choice
+that is yours alone, such as who notes your corrections, takes effect at once. You never open a
+configuration file.
+
+### Keep Vesta's own work out of the task
+
+Some choices are yours and your machine's, not the project's, so they are not in `vesta/vesta.yml`
+and need no proposal. `/vesta-config` changes one by asking; `python3 vesta/.engine setting` lists
+them, and `python3 vesta/.engine setting <name> <answer>` changes one. They are kept under `vesta/.state/`, which is never
+committed, so a colleague's choices are their own.
+
+- `jotting`: who notes your corrections while a task is worked on. `here`, the default: the working
+  agent, as it goes. `later`: nobody; your words are read back from the conversation when the task is
+  reviewed. `aside`: each time you say something, a copy of the conversation is started, notes a
+  correction where there is one, and ends, while the work goes on. Each copy costs about what one
+  reply costs.
+- `review`: who carries out the first part of `/vesta-insight`, which reads the task back and writes
+  notes. `here`, the default: the working agent. `aside`: a copy of the conversation, so the working
+  conversation reads only the result and goes on with the part that is put to you.
+- `harness`: which program the agent runs in. The engine finds it; choose it only where it finds the
+  wrong one.
+
+`later` and `aside` work in Claude Code. In any other harness they fall back to `here`, and
+`setting` says so. For `aside`, Claude Code has to be told to run a command each time you say
+something: `setting jotting aside` prints the lines to add to `.claude/settings.local.json`. The
+start of a task asks which `jotting` you want, until you have answered.
 
 ### Upgrade
 
@@ -167,7 +196,8 @@ file, and the `vesta-*` skill folders. Vesta wrote nothing else.
 ## The loop
 
 1. At the start of a task the agent reads the decisions that bear on it and tells you which they are.
-2. During the task, the agent jots down each time you correct it.
+2. During the task, each time you correct the agent is noted: by the agent as it goes, or, where you
+   choose so, read back from the conversation afterwards or noted by a copy of it.
 3. At the end, the agent records what it used and what you corrected, as short notes. Where you made a
    real choice between alternatives, it may propose recording it as a decision.
 4. Every so often you run `/vesta-learn`. The agent reads the notes that have built up, looks for the
@@ -254,6 +284,9 @@ or never; like any lasting change, that comes back as a proposal.
 - It does not change your project. It records what was decided; fixing the project stays with you.
 - Reading back an earlier conversation reads only the words, not the work, and only where it can find
   or is given the conversation. It never opens one without asking.
+- A copy of a conversation started aside is a second agent: it is told to note one thing or carry out
+  one sheet and to change nothing else, and nothing but the commands it is allowed holds it to that.
+  It runs on the model your harness starts by default.
 - It does not search by meaning. A decision is found by its `when` line and by the paths it names.
 
 ## Status
@@ -267,6 +300,7 @@ Experimental. Its tests pass on Linux, macOS and Windows; these are untried:
 - an upgrade between two released versions;
 - a team sharing one `vesta/` folder across branches and merges;
 - any harness other than Claude Code;
+- `jotting` and `review` set to `aside` over a long task: each was run once, on a short conversation;
 - reading back conversations kept by a later version of Claude Code than the one it was written
   against: the files' form is not documented.
 
@@ -277,7 +311,7 @@ Experimental. Its tests pass on Linux, macOS and Windows; these are untried:
 
 Both need Python 3.9 or later and nothing else. `engine/` is the program; `tools/build.py` copies it
 into `skills/vesta-init/engine/`, which is the copy a project receives, so run it before the tests
-after any change under `engine/`. `skills/` holds the five skills. The tests are under `engine/tests/`.
+after any change under `engine/`. `skills/` holds the six skills. The tests are under `engine/tests/`.
 
 `python3 tools/neutrality.py` checks that nothing shipped holds a string from a private list of terms
 a maintainer keeps outside the repository; without that list it checks nothing and says so.

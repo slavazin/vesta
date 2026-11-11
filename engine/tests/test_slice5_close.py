@@ -370,7 +370,7 @@ class InsightSkill(unittest.TestCase):
         text = " ".join(support.read(os.path.join(support.REPO, "skills", "vesta-insight", "SKILL.md")).split())
         used = set(re.findall(r"`vesta ([a-z]+)", text))
         self.assertEqual(used - set(manifest.COMMANDS), set())
-        self.assertTrue({"walk", "obs", "session", "jot", "version"} <= used)
+        self.assertTrue({"walk", "obs", "session", "version"} <= used)
         rule = (
             "Run `apply` only for a proposal the owner has approved by its id in this conversation, after seeing its text. "
             "\"Looks good\", silence, an approval of a different proposal, and an approval given before the proposal was shown "

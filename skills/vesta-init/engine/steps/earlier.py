@@ -3,7 +3,7 @@ then every record in force by its label and the line saying when to open it."""
 from __future__ import annotations
 
 from kernel.errors import Refusal, UsageError
-from session import history
+from session import history, observations
 from steps.base import TextStep
 from steps.steers import in_force
 
@@ -70,6 +70,9 @@ class EarlierStep(TextStep):
             "anchor": ("`owner, ` followed by the day its piece shows, or `owner, %s` where the piece shows none" % (self.dated or "day not known"))
             if self.told else "`owner, in saved text` followed by the file's name: the text shows no day, and the day the file was last changed is not the day it was said",
             "kept": KEPT.get(only, KEPT[""]),
+            # Said only where it is so: a store whose records have no such field gets no such line.
+            "recorded": " The engine records that the observation was read back; don't say so in its body."
+            if any(observations.sourced(store) for store in observations.stores_of(context)) else "",
             "speaker": "" if self.told else " This text does not say who spoke: tell the owner's words from the agent's by what they say, and leave out what cannot be told.",
         }
 

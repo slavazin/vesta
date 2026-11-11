@@ -10,6 +10,7 @@ from kernel import root as roots
 from kernel import tree as trees
 from kernel.errors import Refusal, UsageError
 from model.abstractions import SourceError
+from session import harness
 
 FOLDER = "vesta/.state/sessions"
 OPEN, CLOSED, ABANDONED = "open", "closed", "abandoned"
@@ -166,6 +167,41 @@ def reading_back(tree):
     return [session for session in every(tree) if session.status == OPEN and session.origin is not None]
 
 
+def _is_conversation(found):
+    return isinstance(found, dict) and all(isinstance(found.get(name), str) and found.get(name) for name in ("harness", "name"))
+
+
+def conversation_of(session):
+    """The name of the conversation a task's session was opened from, where the harness said, else an empty text."""
+    found = session.data.get("conversation")
+    return found["name"] if _is_conversation(found) else ""
+
+
+COPY = "copy"
+
+
+def copy_of(session):
+    """The copy of the conversation that a session's part was given to and that is not accounted for
+    yet: {id, started, minted} and, once it ended, `ended`. None where there is none, or where what
+    the file holds under that key does not read."""
+    found = session.data.get(COPY)
+    reads = (isinstance(found, dict) and isinstance(found.get("id"), str) and found.get("id") and isinstance(found.get("started"), str)
+             and isinstance(found.get("minted"), int) and not isinstance(found.get("minted"), bool) and found["minted"] >= 0
+             and isinstance(found.get("ended", ""), str))
+    return found if reads else None
+
+
+def bind(session, harness, name):
+    """Write down the conversation a task's session belongs to."""
+    session.data["conversation"] = {"harness": harness, "name": name}
+
+
+def bound(tree, harness, name):
+    """The open sessions of ordinary work that were opened from one conversation."""
+    return [session for session in open_ones(tree)
+            if conversation_of(session) == name and session.data["conversation"]["harness"] == harness]
+
+
 def create(context, ask="", late=False, origin=None):
     """Open a session: a fresh id, the ask, and the base the change source marks now. `origin` is
     given for a session that reads back an earlier conversation."""
@@ -189,6 +225,10 @@ def create(context, ask="", late=False, origin=None):
         session.data["base-note"] = note
     if origin is not None:
         session.data["origin"] = origin
+    else:
+        running = harness.current(context)
+        if running is not None and running.conversation():
+            bind(session, running.id, running.conversation())
     save(tree, session)
     return session
 

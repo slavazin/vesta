@@ -60,7 +60,9 @@ steps out; the sheet lists the ones it prints.
    `vesta/.engine.next` is, an upgrade stopped half-way: `/vesta-init upgrade` finishes it.
 3. **Print the first part.** Run `vesta walk close`, with `--short` for the short form. Where the
    conversation never ran `/vesta-hook`, add `--ask -` and give on standard input what the session did:
-   the engine then opens a session late and the sheet says so.
+   the engine then opens a session late and the sheet says so. Where what is printed says that the
+   part is carried out aside, run the command it names, wait for it, and go on from step 5 with the
+   command that one prints.
 4. **Carry out the part** from top to bottom. Each section's **Do** line is an instruction for now. Work out what each section found, including nothing, as your own working: the owner is told only what the sheet's last part asks for. Several sections have you prepare a note: keep each one,
    and send them all in the single `vesta obs add` call the last section of the part asks for. That
    section ends by closing the session with `vesta session close`.
@@ -71,14 +73,14 @@ steps out; the sheet lists the ones it prints.
    or two plain sentences: what would change, and what it would cost from now on. On a yes that names
    it, run `vesta apply <id>`; on a no, `vesta reject <id> --reason -` with their reason. What the owner does not decide stays waiting and is listed at the
    next start.
-8. **If the owner corrects something after the report,** run `vesta jot --steer -` with their words. The
-   engine opens a session to hold it, and the next `/vesta-hook` offers to close that session.
+8. **If the owner corrects something after the report,** do what the sheet's last part said for that
+   case: it differs by machine, and the sheet printed only what holds here.
 
 ## Do / Don't
 
 - Do work from the bundle first and memory second. Don't rebuild the session from recall alone: the
   jots were written while the detail was in view.
-- Do write the note and move on. Don't build a case, and don't put the fix in it.
+- Do write each note as the sheet prints, and move on. Don't build a case.
 - Do list every correction, including ones that feel minor. Don't file agreement as a correction, and
   never ask the owner whether they have more.
 - Do answer every question the sheet asks; "nothing" is an answer. Don't file an answer its own

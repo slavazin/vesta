@@ -50,8 +50,10 @@ class Context(object):
     sheet is being printed for; both are empty until a command sets them.
     """
 
-    def __init__(self, root, tree, config, stores, clock, known, out, config_text="", shipped=None, services=None):
+    def __init__(self, root, tree, config, stores, clock, known, out, config_text="", shipped=None, services=None, environ=None):
         self.services = services
+        # The environment the command was started in, as a mapping; what a harness is told apart by.
+        self.environ = environ if environ is not None else {}
         self.session = None
         self.stdin = None
         self.walk = None
@@ -71,7 +73,7 @@ class Context(object):
 
     def over(self, tree, stores):
         """The same context over another tree, as when a change is tried in an overlay."""
-        return Context(self.root, tree, self.config, stores, self.clock, self.known, self.out, self.config_text, self.shipped, self.services)
+        return Context(self.root, tree, self.config, stores, self.clock, self.known, self.out, self.config_text, self.shipped, self.services, self.environ)
 
     def member(self, table, name):
         """The class of a member the manifest holds, imported at this moment and not before."""

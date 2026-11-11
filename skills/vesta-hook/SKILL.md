@@ -52,9 +52,9 @@ Then the brief, then the work.
      Then run the start command again with `--new`.
 4. **Carry out the sheet** from top to bottom. Each section's **Do** line is an instruction for now. Work out what each section found, including nothing, as your own working: the owner is told only what the sheet's last part asks for.
 5. **Give the owner the brief** the sheet ends with, in its order, and nothing else.
-6. **Work.** At the moment the owner corrects or redirects the work, run `vesta jot --steer -` with their
-   words on standard input. For anything else worth a line, run `vesta jot -`. A jot takes seconds; don't
-   stop to analyse it.
+6. **Work.** The sheet's last part says what to note while working, and who notes the owner's
+   corrections: that differs by machine, and the sheet prints only what holds here. Where it puts a
+   question to the owner about a setting, ask it once and keep the answer with the command it names.
 7. **Before telling the owner the work is done,** run `/vesta-insight`.
 
 ## Do / Don't

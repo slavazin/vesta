@@ -126,7 +126,7 @@ Records in force, for naming the one that should have caught a correction:
 
 **Do:** Go through the conversation and list every time the owner corrected the work, redirected it, chose between alternatives, or stated a preference. Start from the corrections captured above and add what they miss. Agreement with a recommendation is not a steer, and neither is a request for status.
 
-For each steer, prepare an observation for the one `obs add` call a later section asks for, with `via: owner-steer`: the owner's words quoted or closely paraphrased; its `steer-kind`; its `moment`, the point at which asking would have made the steer unnecessary; and `missed-by`, which names the record from the list above, or the row or lens of this sheet, that should have caught it, or `none`. Don't ask the owner for more corrections.
+For each steer, prepare an observation for the one `obs add` call a later section asks for, with `via: owner-steer`: its `steer-kind`; its `moment`, the point at which asking would have made the steer unnecessary; and `missed-by`, which names the record from the list above, or the row or lens of this sheet, that should have caught it, or `none`. Don't ask the owner for more corrections.
 
 ## 6. Lenses
 
@@ -149,7 +149,38 @@ Don't put these questions to the owner; the close report carries what the answer
 
 ## 7. Mint
 
-How to write one: `vesta/observations/SCHEMA.md`.
+How to write one, from `vesta/observations/SCHEMA.md`. It holds for every observation prepared on this sheet, whichever section asked for it:
+
+### Title and body
+
+These hold for every observation, whichever walk writes it and wherever the noticing came from.
+
+- The title names what was noticed, as a thing that happened: "The release script asks for the version
+  number three times". It is not an instruction and not a fix: "Pass the version between the stages"
+  is the title of a proposal.
+- The body states the instance in 600 characters or fewer: what happened, where, and what came of it.
+- Write both for a reader who was not there. Name each thing by its path, its id or its name; give a
+  date as `2026-03-14`; leave out "we", "currently" and "the above".
+- For a correction by the owner, the body states what the work did and what the owner asked for
+  instead. Quote the owner in two sentences at most, and only where the wording matters. Where only
+  the owner's words are in view, as when a conversation held before is read back, state no more of
+  the work than the words show. The title names what the work did, not the rule: "A client's name was
+  spelled the common way, not the way the client spells it", never "Spell a client's name as the
+  client does".
+- Quote nothing that reads as a password, a key or a token.
+- No line of the body opens with `Fix:`, `Proposal:` or `TODO:`: an observation that says what to do
+  is a proposal in the wrong folder.
+
+### Do and Don't
+
+- Do write one noticing with one anchor in a few lines. Don't build a case; a page of context is a
+  proposal.
+- Do state what happened. Don't state the fix.
+- Do write it without looking at earlier observations. Don't search for an earlier instance or edit one to
+  absorb this.
+- Do give a `recheck` only where a probe can express it. Don't write a date or a condition nobody could
+  observe.
+
 `obs add` reads a JSON array on standard input, one item for each observation:
 
 ```json
@@ -160,7 +191,9 @@ How to write one: `vesta/observations/SCHEMA.md`.
 
 The engine fills the rest: the id, the date, the session, and where the observation stands.
 
-**Do:** Read the Fields table of the SCHEMA file named above: it gives the values each key takes and when a key is filled. Read the *Write card* of `vesta/language.md`. Then send every prepared observation in one call of the `obs add` command shown above, giving the JSON array on standard input, one item for each. Leave out a key that does not apply. A jot in the bundle that no prepared observation covers is sent as one, with `via: jot`. One noticing, one anchor, no fix. Don't look at earlier observations to see whether something was noticed before. Where the command refuses, nothing was written: correct the items it names and send the whole array again. Where nothing was prepared, send nothing.
+**Do:** Write every prepared observation as the sections printed above say: its title, its body, and what it leaves out. Go over each one against them before sending it, and rewrite one that states a fix, gives an instruction, or leans on this conversation to be understood. Read the Fields table of the SCHEMA file named above for the values each key takes and when a key is filled.
+
+Then send every prepared observation in one call of the `obs add` command shown above, giving the JSON array on standard input, one item for each. Leave out a key that does not apply. A jot in the bundle that no prepared observation covers is sent as one, with `via: jot`. Don't look at earlier observations to see whether something was noticed before: counting what recurs is the job of the learn pass. Where the command refuses, nothing was written: correct the items it names and send the whole array again. Where nothing was prepared, send nothing.
 
 Then run `session close`.
 

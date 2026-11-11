@@ -3,6 +3,7 @@ uid: a3f29c0e
 id: O-20260314-a3f29c0e
 date: 2026-03-14
 session: S-20260314-1c0e
+source: review
 via: lens:friction
 anchor: scripts/release.sh
 record: ""

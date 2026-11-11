@@ -2,6 +2,7 @@
 every record in force, its label and the line saying when to open it, and nothing else of it."""
 from __future__ import annotations
 
+from session import settings
 from steps.base import NONE, TextStep
 
 TABLE = "capture"
@@ -15,17 +16,19 @@ class SteersStep(TextStep):
     def data(self, context):
         session = context.walk.session
         lines = ["Corrections captured while the session ran:"]
-        captured = []
+        captured, more = [], []
         for name in context.config.capture:
-            if name not in context.known.get(TABLE, ()):
-                continue
-            for steer in context.member(TABLE, name)().steers(session):
-                captured.append("- %s %s%s (from %s)" % (
-                    steer.get("at", ""), steer.get("text", ""),
-                    " (anchor: %s)" % steer["anchor"] if steer.get("anchor") else "", name,
-                ))
+            if name in context.known.get(TABLE, ()):
+                captured.extend(context.member(TABLE, name)().lines(session, context))
         lines.extend(captured or [NONE])
-        return lines + [""] + in_force(context)
+        # What this person's settings add: sources the project's configuration does not name.
+        for name in settings.turned_on(context, TABLE):
+            if name in context.known.get(TABLE, ()) and name not in context.config.capture:
+                more.extend(context.member(TABLE, name)().lines(session, context))
+        for name, value, why in settings.fallen(context, TABLE):
+            more.append("The setting `%s` is `%s` on this machine, and that cannot be done here: %s. Nothing was read back from the conversation: "
+                        "go through it as you hold it." % (name, value, why))
+        return lines + ([""] + more if more else []) + [""] + in_force(context)
 
 
 def in_force(context):

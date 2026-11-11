@@ -251,7 +251,7 @@ class Upgrade(unittest.TestCase):
         listed = shipping.Shipped(target).fingerprints()
         support.write(os.path.join(target, "templates", "shipped.json"), json.dumps(listed, indent=1, sort_keys=True) + "\n")
         path = os.path.join(target, "kernel", "version.py")
-        support.write(path, support.read(path).replace('ENGINE = "0.2.0"', 'ENGINE = "%s"' % version))
+        support.write(path, support.read(path).replace('ENGINE = "0.3.0"', 'ENGINE = "%s"' % version))
         self.relist(target)
 
     def relist(self, target):
@@ -267,7 +267,7 @@ class Upgrade(unittest.TestCase):
             mine = read("README.md") + "\nA line this project added.\n"
             support.write(os.path.join(root, "vesta", "README.md"), mine)
             config = read("vesta.yml")
-            self.next_engine(root, "0.3.0", {
+            self.next_engine(root, "0.4.0", {
                 "README.md": read("README.md").replace("A line this project added.\n", "") + "\nA line the new version ships.\n",
                 "language.md": read("language.md") + "\nA rule the new version ships.\n",
                 "walks/NEWS.md": "# News\n",
@@ -284,16 +284,16 @@ class Upgrade(unittest.TestCase):
             self.assertEqual(read("vesta.yml"), config)
             self.assertFalse(os.path.exists(os.path.join(root, "vesta", "vesta.yml.new")))
             self.assertEqual(sorted(name for name in os.listdir(os.path.join(root, "vesta")) if name.startswith(".engine")), [".engine"])
-            self.assertEqual(self.engine(root, ".engine", "version")[1].split("\n")[0], "engine 0.3.0")
+            self.assertEqual(self.engine(root, ".engine", "version")[1].split("\n")[0], "engine 0.4.0")
             manifest = json.loads(read(".manifest.json"))
             self.assertEqual(manifest["language.md"], shipping.digest(read("language.md")))
             self.assertNotEqual(manifest["README.md"], shipping.digest(mine))
             code, out, err = self.engine(root, ".engine", "check")
             self.assertEqual(code, 0, out + err)
             self.assertNotIn("Note:", out)
-            self.assertIn("· upgrade · engine 0.2.0 to 0.3.0 · schema 1 to 1 · 2 files replaced", read("log/admissions.md"))
+            self.assertIn("· upgrade · engine 0.3.0 to 0.4.0 · schema 1 to 1 · 2 files replaced", read("log/admissions.md"))
             # A second upgrade to the same text changes nothing more.
-            self.next_engine(root, "0.3.0", {"README.md": read("README.md.new"), "language.md": read("language.md"), "walks/NEWS.md": "# News\n"})
+            self.next_engine(root, "0.4.0", {"README.md": read("README.md.new"), "language.md": read("language.md"), "walks/NEWS.md": "# News\n"})
             code, out, err = self.engine(root, ".engine.next", "upgrade")
             self.assertEqual(code, 0, out + err)
             self.assertIn("- vesta/README.md (new text: vesta/README.md.new)", out)  # still waiting to be merged
@@ -303,7 +303,7 @@ class Upgrade(unittest.TestCase):
             shutil.copytree(BUILT, os.path.join(root, "vesta", ".engine.next"))
             code, out, _ = self.engine(root, ".engine.next", "upgrade")
             self.assertEqual(code, 3)
-            self.assertIn("the engine in place is 0.3.0 and this one is 0.2.0", out)
+            self.assertIn("the engine in place is 0.4.0 and this one is 0.3.0", out)
             shutil.rmtree(os.path.join(root, "vesta", ".engine.next"))
             self.assertEqual(fixtures_files(root), before)
 
@@ -356,13 +356,13 @@ class UpgradeAfterTheReview(Upgrade):
         self.assertNotIn("Traceback", out + err)
         self.assertNotIn("did not expect", out + err)
         self.assertEqual(fixtures_files(root), before)
-        self.assertIn("engine 0.2.0", self.engine(root, ".engine", "version")[1].split("\n"))
+        self.assertIn("engine 0.3.0", self.engine(root, ".engine", "version")[1].split("\n"))
 
     def test_a_copy_that_stopped_half_way_is_not_put_in_place(self):
         for lost in ("steps/recall.py", "cli/commands/apply.py", "steps/text/recall.md", "files.json", "session/__init__.py"):
             with tempfile.TemporaryDirectory() as temp:
                 root = self.project(temp)
-                self.next_engine(root, "0.3.0", {})
+                self.next_engine(root, "0.4.0", {})
                 os.remove(os.path.join(root, "vesta", ".engine.next", *lost.split("/")))
                 self.refused(root, 2, "this copy of the engine is not whole")
                 self.clean(root)
@@ -371,7 +371,7 @@ class UpgradeAfterTheReview(Upgrade):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
             self.put(root, "README.md", self.read(root, "README.md") + "\nMine.\n")
-            self.next_engine(root, "0.3.0", {"README.md": "# New\n", "language.md": self.read(root, "language.md") + "\nA new rule.\n"})
+            self.next_engine(root, "0.4.0", {"README.md": "# New\n", "language.md": self.read(root, "language.md") + "\nA new rule.\n"})
             path = os.path.join(root, "vesta", ".engine.next", "kernel", "root.py")
             whole = support.read(path)
             support.write(path, whole.replace("        _rename(current, old)\n", "        _rename(current, old)\n        os._exit(137)\n"))
@@ -383,7 +383,7 @@ class UpgradeAfterTheReview(Upgrade):
             os.remove(os.path.join(root, "vesta", ".state", "command.lock"))  # a killed command's lock; it goes stale in seconds
             code, out, err = self.engine(root, ".engine.next", "upgrade")
             self.assertEqual(code, 0, out + err)
-            self.assertIn("Upgraded the engine from 0.2.0 to 0.3.0.", out)
+            self.assertIn("Upgraded the engine from 0.3.0 to 0.4.0.", out)
             self.assertIn("vesta/language.md", out)
             self.assertIn("- vesta/README.md (new text: vesta/README.md.new)", out)
             self.assertEqual(len([line for line in self.read(root, "log/admissions.md").split("\n") if "· upgrade ·" in line]), 1)
@@ -394,7 +394,7 @@ class UpgradeAfterTheReview(Upgrade):
     def test_a_stop_after_the_engine_is_in_place_still_reports_once(self):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
-            self.next_engine(root, "0.3.0", {"language.md": self.read(root, "language.md") + "\nA new rule.\n"})
+            self.next_engine(root, "0.4.0", {"language.md": self.read(root, "language.md") + "\nA new rule.\n"})
             path = os.path.join(root, "vesta", ".engine.next", "cli", "commands", "upgrade.py")
             support.write(path, support.read(path).replace("    upgrading.drop(tree)\n    for line", "    os._exit(137)\n    for line"))
             self.relist(os.path.join(root, "vesta", ".engine.next"))
@@ -409,7 +409,7 @@ class UpgradeAfterTheReview(Upgrade):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
             files = shipping.digest(self.read(root, ".manifest.json"))
-            self.put(root, ".state/upgrade.json", json.dumps({"from": "0.2.0", "to": "0.9.0", "report": ["x"], "files": files}))
+            self.put(root, ".state/upgrade.json", json.dumps({"from": "0.3.0", "to": "0.9.0", "report": ["x"], "files": files}))
             for _ in range(2):  # it is said at every command until the upgrade is finished
                 code, out, _ = self.engine(root, ".engine", "check")
                 self.assertEqual(code, 0, out)
@@ -417,9 +417,9 @@ class UpgradeAfterTheReview(Upgrade):
             # A record that no longer matches the files, is older than the engine in place, or does
             # not read says nothing, and is removed.
             stale = [
-                json.dumps({"from": "0.2.0", "to": "0.9.0", "report": ["x"], "files": "0" * 64}),
+                json.dumps({"from": "0.3.0", "to": "0.9.0", "report": ["x"], "files": "0" * 64}),
                 json.dumps({"from": "0.0.1", "to": "0.0.9", "report": ["x"], "files": files}),
-                json.dumps({"from": "0.2.0", "to": "soon", "report": ["x"], "files": files}),
+                json.dumps({"from": "0.3.0", "to": "soon", "report": ["x"], "files": files}),
                 json.dumps({"to": "0.9.0"}), "[", "",
             ]
             for text in stale:
@@ -430,7 +430,7 @@ class UpgradeAfterTheReview(Upgrade):
                 self.assertFalse(os.path.exists(os.path.join(root, "vesta", ".state", "upgrade.json")), text)
 
     def migrating(self, root, body, texts=None):
-        self.next_engine(root, "0.3.0", texts or {})
+        self.next_engine(root, "0.4.0", texts or {})
         target = os.path.join(root, "vesta", ".engine.next")
         for name in ("kernel/version.py", "model/config.py"):
             path = os.path.join(target, *name.split("/"))
@@ -452,7 +452,7 @@ class UpgradeAfterTheReview(Upgrade):
             self.assertEqual(code, 0, out + err)
             self.assertIn("The folder was brought from schema 1 to schema 2.", out)
             self.assertIn("schema: 2\n", self.read(root, "vesta.yml"))
-            self.assertEqual(self.engine(root, ".engine", "version")[1].split("\n")[:2], ["engine 0.3.0", "schema 2"])
+            self.assertEqual(self.engine(root, ".engine", "version")[1].split("\n")[:2], ["engine 0.4.0", "schema 2"])
             self.clean(root)
             self.assertIn("· schema 1 to 2 ·", self.read(root, "log/admissions.md"))
             # The same engine again: the folder is at its schema, so the migration does not run twice.
@@ -501,13 +501,13 @@ class UpgradeAfterTheReview(Upgrade):
                 root = self.project(temp)
                 self.put(root, "vesta.yml", self.read(root, "vesta.yml").replace("schema: 1\n", line + "\n" if line else ""))
                 self.assertEqual(self.engine(root, ".engine", "adopt", "vesta/vesta.yml")[0], 0)
-                self.next_engine(root, "0.3.0", {})
+                self.next_engine(root, "0.4.0", {})
                 self.refused(root, 2, "does not say which schema the folder is at")
 
     def test_an_upgrade_waits_for_a_hand_edit_to_be_accepted_and_for_the_lock(self):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
-            self.next_engine(root, "0.3.0", {"language.md": "# New\n"})
+            self.next_engine(root, "0.4.0", {"language.md": "# New\n"})
             self.put(root, ".state/command.lock", "")
             self.refused(root, 2, "another command is changing vesta/")
             os.remove(os.path.join(root, "vesta", ".state", "command.lock"))
@@ -530,7 +530,7 @@ class UpgradeAfterTheReview(Upgrade):
             root = self.project(temp)
             self.put(root, "README.md", self.read(root, "README.md") + "\nMine.\n")
             self.put(root, "README.md.new", "half merged by the owner\n")
-            self.next_engine(root, "0.3.0", {"README.md": "# Newer\n"})
+            self.next_engine(root, "0.4.0", {"README.md": "# Newer\n"})
             self.refused(root, 3, "an earlier upgrade left vesta/README.md.new")
 
     def test_a_lost_record_of_the_shipped_files_is_said_and_nothing_is_replaced_blind(self):
@@ -543,7 +543,7 @@ class UpgradeAfterTheReview(Upgrade):
                     self.put(root, ".manifest.json", text)
                 self.assertIn("vesta/.manifest.json", self.engine(root, ".engine", "doctor")[1])
                 old = self.read(root, "language.md")
-                self.next_engine(root, "0.3.0", {"language.md": old + "\nA new rule.\n"})
+                self.next_engine(root, "0.4.0", {"language.md": old + "\nA new rule.\n"})
                 code, out, err = self.engine(root, ".engine.next", "upgrade")
                 self.assertEqual(code, 0, out + err)
                 self.assertIn("vesta/.manifest.json was missing or did not read", out)
@@ -555,7 +555,7 @@ class UpgradeAfterTheReview(Upgrade):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp, pointer=True)
             config, log = self.read(root, "vesta.yml"), self.read(root, "log/admissions.md")
-            self.next_engine(root, "0.3.0", {"vesta.yml": config + "future:\n  setting: 1\n", "log/admissions.md": "# A new heading\n"})
+            self.next_engine(root, "0.4.0", {"vesta.yml": config + "future:\n  setting: 1\n", "log/admissions.md": "# A new heading\n"})
             target = os.path.join(root, "vesta", ".engine.next")
             block = support.read(os.path.join(target, "templates", "pointer-block.md"))
             support.write(os.path.join(target, "templates", "pointer-block.md"), block.replace("<!-- vesta:end -->", "One line more.\n<!-- vesta:end -->"))
@@ -573,7 +573,7 @@ class UpgradeAfterTheReview(Upgrade):
     def test_the_setup_answers_can_still_be_given_after_an_upgrade(self):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
-            self.next_engine(root, "0.3.0", {})
+            self.next_engine(root, "0.4.0", {})
             self.assertEqual(self.engine(root, ".engine.next", "upgrade")[0], 0)
             code, out, err = self.engine(root, ".engine", "init", "--engagement", "quiet")
             self.assertEqual(code, 0, out + err)
@@ -592,7 +592,7 @@ class UpgradeAfterTheReview(Upgrade):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
             before = fixtures_files(root)
-            self.next_engine(root, "0.3.0", {"language.md": self.read(root, "language.md") + "\nA new rule.\n", "walks/NEWS.md": "# News\n"})
+            self.next_engine(root, "0.4.0", {"language.md": self.read(root, "language.md") + "\nA new rule.\n", "walks/NEWS.md": "# News\n"})
             path = os.path.join(root, "vesta", ".engine.next", "cli", "commands", "upgrade.py")
             whole = support.read(path)
             support.write(path, whole.replace("    try:\n        roots.swap(root)\n", "    os._exit(137)\n    try:\n        roots.swap(root)\n"))
@@ -615,10 +615,10 @@ class UpgradeAfterTheReview(Upgrade):
     def test_files_brought_to_a_newer_version_are_not_taken_back(self):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
-            self.next_engine(root, "0.3.0", {})
+            self.next_engine(root, "0.4.0", {})
             files = shipping.digest(self.read(root, ".manifest.json"))
-            self.put(root, ".state/upgrade.json", json.dumps({"from": "0.2.0", "to": "0.4.0", "report": ["x"], "files": files}))
-            self.refused(root, 3, "an upgrade to engine 0.4.0 already brought the files under vesta/ up to date, and this engine is 0.3.0")
+            self.put(root, ".state/upgrade.json", json.dumps({"from": "0.3.0", "to": "0.5.0", "report": ["x"], "files": files}))
+            self.refused(root, 3, "an upgrade to engine 0.5.0 already brought the files under vesta/ up to date, and this engine is 0.4.0")
 
     def test_a_lost_record_of_approvals_stops_the_upgrade(self):
         for text in (None, "[]", "{"):
@@ -628,7 +628,7 @@ class UpgradeAfterTheReview(Upgrade):
                     os.remove(os.path.join(root, "vesta", "log", "admitted.json"))
                 else:
                     self.put(root, "log/admitted.json", text)
-                self.next_engine(root, "0.3.0", {"language.md": "# New\n"})
+                self.next_engine(root, "0.4.0", {"language.md": "# New\n"})
                 before = fixtures_files(root)
                 code, out, err = self.engine(root, ".engine.next", "upgrade")
                 self.assertEqual(code, 3, out + err)
@@ -639,20 +639,20 @@ class UpgradeAfterTheReview(Upgrade):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
             self.put(root, "glossary/SCHEMA.md", "# Glossary\n")
-            self.next_engine(root, "0.3.0", {})
+            self.next_engine(root, "0.4.0", {})
             self.refused(root, 3, "an upgrade cannot be done while vesta/glossary/SCHEMA.md is changed by hand and not accepted")
 
     def test_a_copy_with_files_that_were_not_shipped_or_cut_short_is_not_put_in_place(self):
         for extra in ("extra.py", "junk/a.txt", "templates/vesta/EXTRA.md", "templates/other.md"):
             with tempfile.TemporaryDirectory() as temp:
                 root = self.project(temp)
-                self.next_engine(root, "0.3.0", {})
+                self.next_engine(root, "0.4.0", {})
                 support.write(os.path.join(root, "vesta", ".engine.next", *extra.split("/")), "left by an older copy\n")
                 self.refused(root, 2, "%s is not a file that was shipped" % extra)
         for cut in ("kernel/shipped.py", "cli/main.py", "cli/commands/upgrade.py", "kernel/tree.py"):
             with tempfile.TemporaryDirectory() as temp:
                 root = self.project(temp)
-                self.next_engine(root, "0.3.0", {})
+                self.next_engine(root, "0.4.0", {})
                 path = os.path.join(root, "vesta", ".engine.next", *cut.split("/"))
                 support.write(path, support.read(path)[:900])
                 self.refused(root, 2, "this copy of the engine is not whole")
@@ -675,7 +675,7 @@ class UpgradeAfterTheReview(Upgrade):
             self.put(root, "language.md.new", "left by an earlier upgrade\n")
             self.put(root, "README.md", self.read(root, "README.md") + "\nMine.\n")
             self.put(root, "README.md.new", "half merged by the owner\n")
-            self.next_engine(root, "0.3.0", {"language.md": self.read(root, "language.md") + "\nA new rule.\n"})
+            self.next_engine(root, "0.4.0", {"language.md": self.read(root, "language.md") + "\nA new rule.\n"})
             code, out, err = self.engine(root, ".engine.next", "upgrade")
             self.assertEqual(code, 0, out + err)
             self.assertIn("for the owner to delete: vesta/language.md.new", out)

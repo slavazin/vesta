@@ -14,15 +14,15 @@ pass-001 reads 3 notes, from 3 sessions.
 
 The notes still open, each in full:
 
-O-TOKEN · date: 2026-01-05 · session: S-TOKEN · via: lens:friction · anchor: src/http/client.py · disposition: open
+O-TOKEN · date: 2026-01-05 · session: S-TOKEN · source: review · via: lens:friction · anchor: src/http/client.py · disposition: open
   The export asks for the date twice
     Both stages prompt for it.
 
-O-TOKEN · date: 2026-01-06 · session: S-TOKEN · via: owner-steer · anchor: src/http/client.py · steer-kind: correction · moment: start · missed-by: D-004 · disposition: open
+O-TOKEN · date: 2026-01-06 · session: S-TOKEN · source: review · via: owner-steer · anchor: src/http/client.py · steer-kind: correction · moment: start · missed-by: D-004 · disposition: open
   Twenty seconds was wanted
     Both stages prompt for it.
 
-O-TOKEN · date: 2026-01-07 · session: S-TOKEN · via: owner-steer · anchor: src/http/client.py · steer-kind: choice · moment: start · missed-by: none · disposition: open
+O-TOKEN · date: 2026-01-07 · session: S-TOKEN · source: review · via: owner-steer · anchor: src/http/client.py · steer-kind: choice · moment: start · missed-by: none · disposition: open
   The owner chose plain numbers
     Both stages prompt for it.
 

@@ -824,7 +824,7 @@ class HookSkill(unittest.TestCase):
         text = " ".join(support.read(os.path.join(support.REPO, "skills", "vesta-hook", "SKILL.md")).split())
         used = set(re.findall(r"`vesta ([a-z]+)", text))
         self.assertEqual(used - set(manifest.COMMANDS), set())
-        self.assertTrue({"walk", "jot", "version"} <= used)
+        self.assertTrue({"walk", "version"} <= used)
         for phrase in ("Nothing forces this skill to be run", "carried out honestly", "cannot tell whether the owner approved it", "--continue", "--new", "walk close --short --session"):
             self.assertIn(phrase, text)
 
