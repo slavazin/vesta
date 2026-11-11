@@ -72,6 +72,38 @@ For whoever wants the mechanism, and for the agent. Using Vesta does not require
 - Closing a session writes one line per decision it read to `log/consultations.jsonl`. A session left
   unfinished is abandoned, and its lines say `unclosed`.
 
+## Earlier conversations
+
+- `/vesta-backfill` reads conversations held before now, one at a time, and writes notes from what the
+  owner said in them. It changes nothing else: the notes wait for a learn pass like any others.
+- `history` prints where such conversations are kept and how many files are there. It reads only the
+  names and dates of files; `history list`, `history turns` and the `backfill` walk open them. The
+  engine reads them and never writes outside `vesta/`.
+- The engine knows the files of Claude Code, whose form is not documented and may change. It finds the
+  ones kept for the project's own folder; ones kept under another folder's name are read by naming that
+  folder or file with `--in <path>`. Any file or folder of saved text is read by the place `file`, also
+  with `--in <path>`; there the engine cannot tell the owner's words from the agent's, and the reader does.
+  A file with lines of which none is in the form the engine knows does not read; named alone, it is
+  read as saved text.
+- From a file of Claude Code the owner's words are: what they typed, also while the agent was working;
+  the words after a command they typed; what they answered where the agent asked; and what they said on
+  turning an action down. What the harness wrote in their place is left out and counted on the sheet.
+- Each reading gets a session of its own, opened late. It is no task's session: it takes notes and is
+  closed or abandoned, and nothing else; no other command takes it for the open session; no proposal
+  names it as its source; and closing it adds no line to `log/consultations.jsonl`.
+- What was read back is kept under `.state/`, on this machine only, by what was said and not by the file.
+  A conversation read in full is refused a second time, so that its notes are not written twice; one
+  that was added to is offered again for what is new; words carried over into a second file are read
+  once. A reading whose session was abandoned before any note was written does not count.
+  `history forget <place> <conversation>` drops every reading that holds what was said in one, so that
+  it is offered again; notes already written from it stay.
+- The start of a task says when tasks have ended without a review since the last thing read back
+  (`reminders.unreviewed`, on unless the configuration turns it off), and names `/vesta-backfill`.
+- A conversation that cannot be read is refused by name. Lines of one that do not read are counted on
+  the sheet.
+- A project whose `vesta.yml` names no `backfill` walk has the shipped one, with the steps `earlier` and
+  `mint`, for as long as `walks/backfill.md` is there. Deleting that file removes the walk.
+
 ## Learn passes
 
 - A pass reads the notes that were open when it opened, and no others. One pass is open at a time, and

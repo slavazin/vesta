@@ -12,7 +12,7 @@ from kernel.shipped import MANIFEST
 from kernel.errors import UsageError
 from kernel.version import ENGINE
 from model.abstractions import SourceError
-from session import passes, state
+from session import history, passes, state
 
 
 def _is_file(tree, path):
@@ -62,6 +62,8 @@ def run(context, arguments):
     now = context.clock.now()
     for session in unclosed:
         context.write("  - %s; age: %s" % (session.one_line(), _age(session.opened, now)))
+    if unclosed:
+        context.write("  Close one with `walk close --short --session <id>`, or leave it with `session abandon <id>`.")
     for path in state.unreadable(context.tree):
         context.write("- A session file does not read: %s. It is the engine's working state and no record, so this one file may be deleted by hand." % path)
     try:
@@ -69,6 +71,17 @@ def run(context, arguments):
         context.write("- Learn pass: %s" % ("%s is open, opened %s; `walk learn` goes on with it" % (found.id, found.opened) if found else "none open"))
     except UsageError as error:
         context.write("- Learn pass: %s" % error)
+    reading = state.reading_back(context.tree)
+    if reading:
+        context.write("- Sessions reading back an earlier conversation, not closed: %d" % len(reading))
+        for session in reading:
+            context.write("  - %s; age: %s" % (session.one_line(), _age(session.opened, now)))
+        context.write("  Go on with one with `walk backfill --session <id>`, or leave it with `session abandon <id>`.")
+    try:
+        read_back = [entry for entry in history.read(context.tree) if history.counts(context.tree, entry)]
+        context.write("- Readings of earlier conversations that are done: %s" % (len(read_back) or "none"))
+    except UsageError as error:
+        context.write("- Readings of earlier conversations: %s" % error)
     try:
         listed = json.loads(context.tree.read(MANIFEST)) if _is_file(context.tree, MANIFEST) else None
     except (OSError, ValueError, UnicodeDecodeError):
@@ -81,6 +94,4 @@ def run(context, arguments):
     damage = context.shipped.whole()
     if damage:
         context.write("- This copy of the engine is not whole (%d file%s; the first: %s). `/vesta-init upgrade` replaces it." % (len(damage), "" if len(damage) == 1 else "s", damage[0]))
-    if unclosed:
-        context.write("  Close one with `walk close --short --session <id>`, or leave it with `session abandon <id>`.")
     return 0

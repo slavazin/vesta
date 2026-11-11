@@ -19,7 +19,7 @@ def run(context, arguments):
         if not sign or mark not in state.MARKS:
             raise UsageError("`%s` is not `<id>=<mark>`; the marks are: %s" % (pair, ", ".join(state.MARKS)))
         wanted.append((show.resolve(context, name)[1], mark))
-    session = sessions.current(context, options)
+    session = sessions.ordinary(sessions.current(context, options), "a mark")
     if session.status != state.OPEN:
         raise Refusal(
             "%s is %s and its marks are already in the log, so a mark set now would never reach it. Nothing was marked." % (session.id, session.status),

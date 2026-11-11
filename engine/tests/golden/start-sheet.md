@@ -127,7 +127,7 @@ Don't put these questions to the owner; the brief names an answer only where it 
 
 none
 
-**Do:** Tell the owner each notice in one plain line: what is waiting for their decision, and that `/vesta-learn` is worth running where a learn pass is due. Where this section says `none`, say nothing about it.
+**Do:** Tell the owner each notice in one plain line: what is waiting for their decision, that `/vesta-learn` is worth running where a learn pass is due, and that `/vesta-backfill` can read back the tasks that ended without a review, where the section says so. Where this section says `none`, say nothing about it.
 
 ---
 

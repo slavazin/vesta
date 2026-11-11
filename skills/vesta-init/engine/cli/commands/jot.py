@@ -14,6 +14,7 @@ def run(context, arguments):
     if not text.strip():
         raise UsageError("the jot is empty; nothing was noted")
     session, opened = sessions.current_or_late(context, options)
+    sessions.ordinary(session, "a jot")
     if session.status != state.OPEN:
         raise Refusal("%s is %s; a jot goes into an open session. Run `jot` without `--session`, and one is opened to hold it." % (session.id, session.status), state.RULE)
     at, steer, anchor = context.clock.timestamp(), "--steer" in options, options.get("--anchor", "")

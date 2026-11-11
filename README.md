@@ -4,7 +4,7 @@ Vesta keeps what a project has decided as plain text files beside the project, a
 decisions that bear on a task when the task starts. Every lasting change to those files is shown to a
 person, who says yes or no.
 
-It is a set of four agent skills and a small Python program with no dependencies. Everything it knows
+It is a set of five agent skills and a small Python program with no dependencies. Everything it knows
 about a project lives in one folder, `vesta/`, inside that project.
 
 **Status: experimental.** See *Status* at the end for what is untried.
@@ -20,6 +20,9 @@ Three moments, and one habit.
 | when reminded, or when the same corrections keep recurring | `/vesta-learn` | a list of proposals, each to approve or reject |
 
 The habit: when shown a proposal, answer yes or no by its number. You can stop reading here and use it.
+
+Once, at the start, there is a fourth: `/vesta-backfill` reads conversations you had with the agent
+before Vesta was set up, so that it does not begin with nothing.
 
 ## Who it suits
 
@@ -44,9 +47,9 @@ looks for the files a task changed, it skips folders named `.git`, `node_modules
 ## Install
 
 1. Get a release: download the latest one from this repository's releases page and unpack it, or clone
-   the repository and check out its tag. Each release is tagged `v` and the engine's version, `v0.1.0`.
-2. Copy the four folders under its `skills/` (`vesta-init`, `vesta-hook`, `vesta-insight`,
-   `vesta-learn`) into `.claude/skills/` of your project. From the unpacked repository:
+   the repository and check out its tag. Each release is tagged `v` and the engine's version, `v0.2.0`.
+2. Copy the five folders under its `skills/` (`vesta-init`, `vesta-hook`, `vesta-insight`,
+   `vesta-learn`, `vesta-backfill`) into `.claude/skills/` of your project. From the unpacked repository:
    - macOS and Linux: `mkdir -p "<your project>/.claude/skills" && cp -R skills/vesta-* "<your project>/.claude/skills/"`
    - Windows PowerShell: `New-Item -ItemType Directory -Force "<your project>\.claude\skills"; Copy-Item -Recurse skills\vesta-* "<your project>\.claude\skills\"`
 
@@ -66,6 +69,24 @@ much it should ask of you, and creates the `vesta/` folder. It then offers two t
 
 It writes nothing outside `vesta/` without asking. Keep `vesta/` with the project: where the project is
 under version control, commit it. It carries its own `.gitignore` for working state.
+
+### Start with what earlier conversations taught
+
+Type `/vesta-backfill` after setting up, or later, when tasks were finished without `/vesta-insight`.
+It finds the conversations you had with the agent in this project, tells you which folder they are in
+and how many there are, and asks before it opens one. It then reads the latest five (say `last 8` for
+another number, up to 20) and writes a note for each time you corrected the agent, redirected it, or
+said how work is done here. Say `corrections` to keep only the outright corrections.
+
+When two tasks have ended without `/vesta-insight`, the next `/vesta-hook` says so and names this
+command. It writes notes and nothing else. To turn them into decisions, type `/vesta-learn` in a new
+conversation; you approve or reject each one there.
+
+It knows where Claude Code keeps conversations. For anything else, save a conversation as text and
+give the path: `/vesta-backfill notes/session-with-agent.md`. Short quotes of what you said end up in
+notes under `vesta/observations/`, which is part of the project. The agent is told to quote nothing
+that reads as a password or a key, and nothing checks that it did: you see every note's title in its
+report, and the notes are plain files you can read before committing them.
 
 ### Start a task
 
@@ -123,7 +144,7 @@ name decisions differently. Each such change comes back as a proposal to approve
 
 ### Upgrade
 
-Delete the four `vesta-*` folders under `.claude/skills/`, copy the newer ones there as in *Install*,
+Delete the `vesta-*` folders under `.claude/skills/`, copy the newer ones there as in *Install*,
 and type `/vesta-init upgrade`. Delete first: copying over the old folders leaves old files behind,
 and the upgrade then refuses the copy.
 
@@ -141,7 +162,7 @@ close it.
 ### Remove it
 
 Delete the `vesta/` folder, the block between the two `vesta` marker lines in the agent-instruction
-file, and the four skill folders. Vesta wrote nothing else.
+file, and the `vesta-*` skill folders. Vesta wrote nothing else.
 
 ## The loop
 
@@ -231,6 +252,8 @@ or never; like any lasting change, that comes back as a proposal.
   applied. It records that it was.
 - Its checks read the shape of the files, never whether a decision is true.
 - It does not change your project. It records what was decided; fixing the project stays with you.
+- Reading back an earlier conversation reads only the words, not the work, and only where it can find
+  or is given the conversation. It never opens one without asking.
 - It does not search by meaning. A decision is found by its `when` line and by the paths it names.
 
 ## Status
@@ -243,7 +266,9 @@ Experimental. Its tests pass on Linux, macOS and Windows; these are untried:
 - use by a person on Windows or Linux (only the tests have run there);
 - an upgrade between two released versions;
 - a team sharing one `vesta/` folder across branches and merges;
-- any harness other than Claude Code.
+- any harness other than Claude Code;
+- reading back conversations kept by a later version of Claude Code than the one it was written
+  against: the files' form is not documented.
 
 ## For contributors
 
@@ -252,7 +277,7 @@ Experimental. Its tests pass on Linux, macOS and Windows; these are untried:
 
 Both need Python 3.9 or later and nothing else. `engine/` is the program; `tools/build.py` copies it
 into `skills/vesta-init/engine/`, which is the copy a project receives, so run it before the tests
-after any change under `engine/`. `skills/` holds the four skills. The tests are under `engine/tests/`.
+after any change under `engine/`. `skills/` holds the five skills. The tests are under `engine/tests/`.
 
 `python3 tools/neutrality.py` checks that nothing shipped holds a string from a private list of terms
 a maintainer keeps outside the repository; without that list it checks nothing and says so.

@@ -9,6 +9,17 @@ from session import log, state
 CASES = ("continue", "new", "parallel")
 
 
+def _task(session):
+    """Refuse a session that reads back an earlier conversation: it is no task's, and this walk neither goes on in it nor ends it."""
+    if session.origin is not None:
+        raise Refusal(
+            "%s reads back an earlier conversation, and this walk belongs to a task's session. `walk backfill --session %s` prints "
+            "its sheet; `session abandon %s` leaves it. Nothing was changed." % (session.id, session.id, session.id),
+            "vesta/INTERNALS.md, Earlier conversations",
+        )
+    return session
+
+
 class StartOpening(Opening):
     flags = tuple("--" + case for case in CASES)
 
@@ -19,7 +30,7 @@ class StartOpening(Opening):
         tree, ask = context.tree, options.get("ask", "")
         found = state.open_ones(tree)
         if options.get("continue"):
-            session = state.current(tree, options.get("session"))
+            session = _task(state.current(tree, options.get("session")))
             if session.status != state.OPEN:
                 raise Refusal("%s is %s; `--continue` adds a task to a session that is open." % (session.id, session.status), state.RULE)
             if ask:
@@ -29,7 +40,7 @@ class StartOpening(Opening):
         said = []
         if options.get("new"):
             if options.get("session"):
-                left = [state.named(tree, options["session"])]
+                left = [_task(state.named(tree, options["session"]))]
                 if left[0].status != state.OPEN:
                     raise Refusal("%s is already %s; `--new --session` names an open session to leave." % (left[0].id, left[0].status), state.RULE)
             elif len(found) > 1:

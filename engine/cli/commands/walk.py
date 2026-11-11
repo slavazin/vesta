@@ -70,15 +70,16 @@ def run(context, arguments):
     checkpoint = known[named[0]]
     opening = _opening(checkpoint)
     try:
-        names, options = args.split(arguments, flags=FLAGS + tuple(opening.flags), options=OPTIONS, many=MANY, takes=True)
+        names, options = args.split(arguments, flags=FLAGS + tuple(opening.flags), options=OPTIONS + tuple(opening.options), many=MANY, takes=True)
     except UsageError as error:
-        raise UsageError("%s. `walk %s` takes: %s" % (error, checkpoint.id, " ".join(FLAGS + tuple(opening.flags) + OPTIONS + MANY)))
+        raise UsageError("%s. `walk %s` takes: %s" % (error, checkpoint.id, " ".join(FLAGS + tuple(opening.flags) + OPTIONS + tuple(opening.options) + MANY)))
     if len(names) != 1:
         raise UsageError("`walk` takes one checkpoint; this project has: %s" % ", ".join(known))
     _checked(checkpoint, options)
     ask = args.text(options["--ask"], context.stdin).strip() if "--ask" in options else ""
     given = {"ask": ask, "session": options.get("--session"), "from": options.get("--from"), "with": options.get("--with", [])}
     given.update((flag[2:], flag in options) for flag in opening.flags)
+    given.update((option[2:], options.get(option)) for option in opening.options)
     session, said = opening.open(context, given)
     context.session = session
     paths, outside = _paths(context, options.get("--paths", []))

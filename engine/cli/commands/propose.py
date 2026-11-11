@@ -4,7 +4,7 @@ from __future__ import annotations
 from cli import args
 from kernel import frontmatter, ids, yamlsubset
 from kernel import tree as trees
-from kernel.errors import SubsetError, UsageError
+from kernel.errors import Refusal, SubsetError, UsageError
 from model.abstractions import DISPOSITION, OPEN, OUTCOME, KindError
 from model.record import LABEL, UID, Record
 from proposals import blocks, proposal as proposals
@@ -42,6 +42,11 @@ def _source(context, given):
         given = given.strip()
         if not (given == INIT or passes.NUMBERED.match(given) and not given.endswith(".md") or state.ID.match(given)):
             raise UsageError("`--source %s` is none of: a session id, `pass-<n>` as a learn pass names itself, or `%s`" % (given, INIT))
+        named = state.read(context.tree, given) if state.ID.match(given) else None
+        if named is not None and named.origin is not None:
+            raise Refusal(
+                "%s reads back an earlier conversation, and reading back writes notes only: what becomes of a note is proposed in a "
+                "learn pass, where the owner decides. Nothing was started." % given, "vesta/INTERNALS.md, Earlier conversations")
         return given
     found = state.open_ones(context.tree)
     if len(found) == 1:

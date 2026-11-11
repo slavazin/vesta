@@ -15,7 +15,7 @@ def run(context, arguments):
     if not names:
         raise UsageError("`load` takes one or more record ids, as `load D-004`")
     found = [show.resolve(context, name) for name in names]
-    session = sessions.current(context, options)
+    session = sessions.ordinary(sessions.current(context, options), "a loaded record")
     if session.status != state.OPEN:
         raise Refusal("%s is %s; a record is loaded into an open session. `show <id>` prints one without a session." % (session.id, session.status), state.RULE)
     added = []

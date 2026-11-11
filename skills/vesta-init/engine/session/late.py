@@ -26,6 +26,12 @@ class LateOpening(Opening):
                 state.RULE,
             )
         session, opened = open_or_late(context, name, options.get("ask", ""))
+        if session.origin is not None:
+            raise Refusal(
+                "%s reads back an earlier conversation, and this walk belongs to a task's session. `walk backfill --session %s` prints "
+                "its sheet; `session abandon %s` leaves it. Nothing was changed." % (session.id, session.id, session.id),
+                "vesta/INTERNALS.md, Earlier conversations",
+            )
         if opened:
             return session, [
                 "No session was open, so %s was opened late: it holds no task, no loaded record and no jot from the work already done." % session.id

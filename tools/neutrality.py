@@ -17,7 +17,8 @@ import os
 import re
 import sys
 
-EXEMPT_DIRS = ("spec", ".git", "engine/tests/data")
+# The specification, git's own folder, the test data, and an editor's settings: none of them is published.
+EXEMPT_DIRS = ("spec", ".git", "engine/tests/data", ".idea", ".vscode")
 EXEMPT_FILES = ("LICENSE",)
 LITTER = (".pyc", ".DS_Store")
 RESIDUE = "residue: reads the listed strings only; a paraphrase, a plural or a new name is not found."

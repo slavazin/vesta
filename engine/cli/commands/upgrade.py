@@ -335,7 +335,7 @@ def _report(plan, steps, moved, schema, read, settings, block, config_changed):
     )
     if settings:
         lines.append(
-            "Settings this version knows and this project's %s does not name; each runs at its default until the project sets it "
+            "Settings this version knows and this project's %s does not name; each runs as this version ships it until the project sets it "
             "through a `config` proposal: %s." % (configuration.PATH, ", ".join(settings))
         )
     lines.extend(block)

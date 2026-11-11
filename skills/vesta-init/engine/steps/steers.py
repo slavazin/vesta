@@ -25,16 +25,19 @@ class SteersStep(TextStep):
                     " (anchor: %s)" % steer["anchor"] if steer.get("anchor") else "", name,
                 ))
         lines.extend(captured or [NONE])
-        lines.extend(["", "Records in force, for naming the one that should have caught a correction:"])
-        listed = []
-        for store in context.stores.recalled():
-            role = store.type.role_field("when")
-            for record in store.list():
-                if store.type.is_accepted(record):
-                    said = " ".join(str(record.get(role) if role else "").split())
-                    listed.append("- %s  %s: %s" % (record.label, role or "when", said or "(empty)"))
-        lines.extend(listed or [NONE])
-        return lines
+        return lines + [""] + in_force(context)
+
+
+def in_force(context):
+    """Every record in force, by its label and the line saying when to open it, under one heading."""
+    listed = []
+    for store in context.stores.recalled():
+        role = store.type.role_field("when")
+        for record in store.list():
+            if store.type.is_accepted(record):
+                said = " ".join(str(record.get(role) if role else "").split())
+                listed.append("- %s  %s: %s" % (record.label, role or "when", said or "(empty)"))
+    return ["Records in force, for naming the one that should have caught a correction:"] + (listed or [NONE])
 
 
 MEMBER = SteersStep

@@ -1,7 +1,7 @@
 # Walks
 
-The three files here hold this project's own additions to each walk: `start.md` for the start of a task,
-`close.md` for its end, `learn.md` for the learn pass. The engine's own steps are not listed in them.
+The files here hold this project's own additions to each walk: `start.md` for the start of a task,
+`close.md` for its end, `learn.md` for the learn pass, `backfill.md` for reading back an earlier conversation. The engine's own steps are not listed in them.
 
 A **row** is one check at a fixed moment: a condition, one thing to open, one act owed. A **lens** is a
 standing question asked at a walk, paired with a challenge to its answer.
@@ -22,7 +22,7 @@ standing question asked at a walk, paired with a challenge to its answer.
 
 | Column | Rule |
 |---|---|
-| `lens` | a short name in lower case with hyphens; unique across the three files |
+| `lens` | a short name in lower case with hyphens; unique across these files |
 | `angle` | the question, addressed to the agent, answerable from the session's own work |
 | `counterfactual` | the challenge that names how an answer goes too far |
 | `level` | the lowest engagement level at which the lens is asked |

@@ -25,11 +25,14 @@ def lines_for(session, at, status):
 
 def end(context, session, status):
     """Log the session's loaded records and set it closed or abandoned. Returns the lines written."""
-    lines = lines_for(session, context.clock.timestamp(), status)
-    context.tree.append(PATH, "".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines))
+    # A session that read back an earlier conversation was no task: it loaded nothing, and says nothing here.
+    lines = lines_for(session, context.clock.timestamp(), status) if session.origin is None or session.loaded else []
+    if lines:
+        context.tree.append(PATH, "".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines))
     session.data["status"] = status
     session.data["ended"] = context.clock.timestamp()
-    session.written.append(PATH)
+    if lines:
+        session.written.append(PATH)
     state.save(context.tree, session)
     return lines
 

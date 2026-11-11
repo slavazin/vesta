@@ -37,6 +37,7 @@ SHAPE = {
     "reminders": {
         "learn": {"enabled": BOOL, "open-observations": INT, "sessions-since-pass": INT},
         "pending-proposals": {"enabled": BOOL},
+        "unreviewed": {"enabled": BOOL, "sessions": INT},
     },
     "adapters": {"changes": TEXT, "capture": [TEXT]},
     "changes": {"ignore": [TEXT]},
@@ -94,6 +95,8 @@ class Config(object):
         self.remind_open_observations = _int(learn.get("open-observations"), 25)
         self.remind_sessions_since_pass = _int(learn.get("sessions-since-pass"), 0)
         self.remind_pending = _mapping(reminders.get("pending-proposals")).get("enabled", True) is True
+        unreviewed = _mapping(reminders.get("unreviewed"))
+        self.remind_unreviewed = _int(unreviewed.get("sessions"), 2) if unreviewed.get("enabled", True) is True else 0
         adapters = _mapping(data.get("adapters"))
         self.changes = _text(adapters.get("changes"), AUTO)
         self.capture = _texts(adapters.get("capture"))

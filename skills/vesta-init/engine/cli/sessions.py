@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from kernel import tree as trees
+from kernel.errors import Refusal
 from session import late, state
 
 OPTION = "--session"
@@ -17,6 +18,18 @@ def current_or_late(context, options):
     """As `current`, opening a late session where none is open. Returns (session, opened just now)."""
     context.session, opened = late.open_or_late(context, options.get(OPTION))
     return context.session, opened
+
+
+def ordinary(session, what):
+    """Refuse a session that reads back an earlier conversation where a command belongs to a task's
+    session. Such a session takes notes and is closed or abandoned, and nothing else."""
+    if session.origin is not None:
+        raise Refusal(
+            "%s reads back an earlier conversation, and %s belongs to a task's session. It takes `obs add`, `session close` and "
+            "`session abandon`; `walk backfill --session %s` prints its sheet again. Nothing was changed." % (session.id, what, session.id),
+            "vesta/INTERNALS.md, Earlier conversations",
+        )
+    return session
 
 
 def note_written(context):

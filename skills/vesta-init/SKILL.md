@@ -30,16 +30,15 @@ engine with the one this skill carries. It needs Python 3.9 or later.
 6. Offers to add a short block to the project's agent-instruction file.
 7. Offers to record up to three things the project has already settled.
 8. Checks the result.
-9. Tells the owner the three moments to use it.
+9. Tells the owner the three moments to use it, and offers to read back earlier conversations.
 
 ## Procedure
 
 1. **Find the project root.** It is the working directory, or the repository root where the working
    directory is inside a git repository. Tell the owner the folder in one line and wait for a yes.
 2. **Stop if it is set up.** If `<root>/vesta/vesta.yml` exists, say Vesta is already set up here, offer
-   the upgrade below, and stop.
-   The one exception: where the owner says the setup was cut short before step 5 or 6, go on from that
-   step.
+   the upgrade below, and stop. The one exception: where the owner says the setup was cut short before
+   step 5 or 6, go on from that step.
 3. **Check for Python.** Run `python3 --version`; where that fails, `python --version`. Below 3.9, or
    missing: say that Vesta needs Python 3.9 or later and stop. Use the command that worked wherever these
    steps say `python3`.
@@ -81,8 +80,9 @@ engine with the one this skill carries. It needs Python 3.9 or later.
    in plain words what each error is about. A clean result is "0 errors".
 9. **Tell the owner what they need, and no more.**
    - `/vesta-hook <the task>` when starting a task; `/vesta-insight` when finishing one; `/vesta-learn`
-     when reminded.
-   - A proposal is answered yes or no by its number.
+     when reminded. A proposal is answered yes or no by its number.
+   - Once, now or later: `/vesta-backfill` notes what the owner corrected in conversations held before
+     now, where it finds them or is given them. It asks before it opens one. Offer it; don't run it.
    - They can ask at any time for Vesta to be quieter, more proactive, or to remind differently.
    - `vesta/` is part of the project: commit it where the project is under version control.
    - What a session costs: at the start, the agent reads one short block per decision and reports a

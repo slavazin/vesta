@@ -46,6 +46,10 @@ def context(root, out, clock=None, tree=None):
     except UnicodeDecodeError:
         raise UsageError("%s is not UTF-8 text; save it as UTF-8 and run the command again" % configuration.PATH)
     config = configuration.load(text)
+    for name, entry in manifest.CHECKPOINTS.items():
+        # A project that names no such walk has the shipped one while its file is there; deleting the file removes it.
+        if tree.is_file(configuration.HOME + "/" + entry["walk"]):
+            config.checkpoints.setdefault(name, configuration.Checkpoint(name, entry))
     return Context(root, tree, config, stores_over(tree, config, clock), clock, manifest.known(), out, text, shipped(), Services())
 
 

@@ -16,7 +16,7 @@ TREE = sorted([
     "vesta/decisions/README.md", "vesta/decisions/SCHEMA.md",
     "vesta/observations/README.md", "vesta/observations/SCHEMA.md",
     "vesta/proposals/README.md", "vesta/proposals/SCHEMA.md",
-    "vesta/walks/README.md", "vesta/walks/start.md", "vesta/walks/close.md", "vesta/walks/learn.md",
+    "vesta/walks/README.md", "vesta/walks/start.md", "vesta/walks/close.md", "vesta/walks/learn.md", "vesta/walks/backfill.md",
     "vesta/log/admissions.md", "vesta/log/admitted.json", "vesta/log/consultations.jsonl",
 ])
 FOLDERS = sorted([
@@ -24,7 +24,7 @@ FOLDERS = sorted([
     "vesta/walks", "vesta/log", "vesta/log/proposals", "vesta/log/passes",
 ])
 GOVERNED = sorted([
-    "vesta/vesta.yml", "vesta/language.md", "vesta/walks/start.md", "vesta/walks/close.md", "vesta/walks/learn.md",
+    "vesta/vesta.yml", "vesta/language.md", "vesta/walks/start.md", "vesta/walks/close.md", "vesta/walks/learn.md", "vesta/walks/backfill.md",
     "vesta/decisions/SCHEMA.md", "vesta/observations/SCHEMA.md", "vesta/proposals/SCHEMA.md",
 ])
 

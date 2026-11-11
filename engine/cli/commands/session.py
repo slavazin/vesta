@@ -43,6 +43,10 @@ def run(context, arguments):
     if session.status != state.OPEN:
         raise Refusal("%s is already %s. Nothing was changed." % (session.id, session.status), state.RULE)
     lines = log.end(context, session, state.CLOSED if act == "close" else state.ABANDONED)
+    if session.origin is not None and not lines:
+        context.write("%s %s. It read back an earlier conversation and loaded no record, so the log took no line."
+                      % ("Closed" if act == "close" else "Marked abandoned:", session.id))
+        return 0
     if act == "close":
         unmarked = [line["record"].split("@")[0] for line in lines if line["mark"] == log.UNMARKED]
         context.write("Closed %s. The log took %s." % (session.id, _count(lines)))

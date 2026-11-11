@@ -4,6 +4,7 @@ named in one place, the manifest of the command line. Nothing here knows a concr
 from __future__ import annotations
 
 import abc
+import hashlib
 
 ROLES = ("when", "why", "except", "paths", "triggers")
 
@@ -196,11 +197,13 @@ class Opening(abc.ABC):
 
     One member serves every checkpoint that names no other; a checkpoint whose walk opens
     differently has a member of its own. `flags` are the command-line flags the member reads,
-    beyond the ask and the session every opening is given; each reaches `open` under its name
-    without the dashes.
+    beyond the ask and the session every opening is given, and `options` the ones that take a value;
+    each reaches `open` under its name without the dashes.
     """
 
     flags = ()
+    # The command-line options that take a value, read the same way.
+    options = ()
 
     @abc.abstractmethod
     def open(self, context, options):
@@ -336,4 +339,76 @@ class CaptureSource(abc.ABC):
 
     @abc.abstractmethod
     def steers(self, session):
+        raise NotImplementedError
+
+
+class HistoryError(Exception):
+    """A place earlier conversations are kept that could not be read, with the reason."""
+
+
+class Conversation(object):
+    """One earlier conversation as a history lists it: the name the history gives it, when it was
+    last added to (`YYYY-MM-DD`, or an empty text where that is not known), and the file it is in."""
+
+    def __init__(self, ref, dated, path):
+        self.ref = ref
+        self.dated = dated
+        self.path = path
+
+
+class Turn(object):
+    """One thing said in an earlier conversation. `who` is `owner`, `agent`, or an empty text where
+    the history cannot tell."""
+
+    OWNER, AGENT, UNKNOWN = "owner", "agent", ""
+
+    def __init__(self, who, text, at="", mark=""):
+        self.who = who
+        # What cannot be written as UTF-8 is replaced here, so that nothing later meets it.
+        self.text = text.encode("utf-8", "replace").decode("utf-8")
+        self.at = at
+        # What this one thing said is known by across readings: the history's own id for it, or a digest of its words.
+        self.mark = mark or hashlib.sha256(self.text.encode("utf-8")).hexdigest()[:16]
+
+
+class History(abc.ABC):
+    """Where conversations with an agent that took place before now are kept, outside the project.
+
+    Built from the project root and the path the command line gave, if any. A member reads and never
+    writes. `name` is what the owner is told the place is; `residue` states what the member cannot
+    find. `takes_path`: the owner may name the place; `needs_path`: the member reads no other.
+    After `conversations`, `left_out` says what in the place was passed over, in words, or is empty.
+    After `turns`, `unread` is how many lines could not be read, and `harness` how many things the
+    harness itself wrote in the owner's place and were left out.
+    """
+
+    id = ""
+    name = ""
+    residue = ""
+    takes_path = False
+    needs_path = False
+    left_out = ""
+    # What the day of a conversation is, where the history knows only its file.
+    day_word = "Held on"
+    unread = 0
+    harness = 0
+
+    def __init__(self, root, given=""):
+        self.root = root
+        self.given = given
+
+    @abc.abstractmethod
+    def places(self):
+        """The folders or files this member reads for this project, whether or not they are there."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def conversations(self):
+        """Every conversation found, oldest first, without opening one. Raises HistoryError where
+        the place is not there or cannot be listed."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def turns(self, conversation):
+        """What was said, in order. Raises HistoryError where the conversation cannot be read."""
         raise NotImplementedError

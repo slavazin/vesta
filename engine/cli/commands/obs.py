@@ -20,6 +20,9 @@ def _add(context, store, options):
         raise UsageError("`obs add` reads a JSON array of items from standard input, and standard input was empty. Each item is %s" % observations.shape(store))
     observations.usable(store)
     session, opened = sessions.current_or_late(context, options)
+    if session.status != state.OPEN and session.origin is not None:
+        raise Refusal("%s is %s, and it read back an earlier conversation: a note from that conversation has nowhere to go now. "
+                      "`history forget` has the conversation offered again. Nothing was written." % (session.id, session.status), "vesta/INTERNALS.md, Earlier conversations")
     if session.status != state.OPEN:
         raise Refusal("%s is %s; an observation goes into an open session. Run `obs add` without `--session`, and one is opened to hold it." % (session.id, session.status), state.RULE)
     records = observations.add(context, store, session, text)

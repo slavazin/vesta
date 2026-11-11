@@ -38,6 +38,9 @@ checkpoints:
   learn:
     walk: walks/learn.md
     steps: [window, counts, trigger-review, consolidate, group, route, draft, gate, seal]
+  backfill:
+    walk: walks/backfill.md
+    steps: [earlier, mint]
 recall:
   long-index-at: 60
 reminders:
@@ -47,6 +50,9 @@ reminders:
     sessions-since-pass: 0
   pending-proposals:
     enabled: true
+  unreviewed:
+    enabled: true
+    sessions: 2
 adapters:
   changes: auto
   capture: [jot]

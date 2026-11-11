@@ -23,6 +23,13 @@ RULE = "vesta/INTERNALS.md, Sessions"
 ENGINE_OWNED = tuple(trees.HOME + name + "/" for name in roots.ENGINES) + (trees.STATE,)
 
 
+def _is_origin(found):
+    """Say whether a session's `origin` reads: the place and the conversation named, and the rest of the kinds written."""
+    return (isinstance(found, dict) and all(isinstance(found.get(name), str) and found.get(name) for name in ("history", "conversation"))
+            and all(isinstance(found.get(name, ""), str) for name in ("in", "dated", "only"))
+            and (found.get("marks") is None or (isinstance(found["marks"], list) and all(isinstance(mark, str) for mark in found["marks"]))))
+
+
 class Session(object):
     """One session as its file holds it."""
 
@@ -43,7 +50,9 @@ class Session(object):
     # How a walk sheet names what it runs in, and how the command for its next part finds it again.
     ask_word = "Task"
     requested = ()
-    heading = property(lambda self: "Session: %s" % self.id)
+    # Where the session's conversation is kept, for one that reads back a conversation held before now.
+    origin = property(lambda self: self.data.get("origin") if _is_origin(self.data.get("origin")) else None)
+    heading = property(lambda self: "Session: %s%s" % (self.id, ", opened to read back an earlier conversation" if self.origin else ""))
     resume = property(lambda self: " --session %s" % self.id)
 
     def entry(self, record):
@@ -147,11 +156,19 @@ def unreadable(tree):
 
 
 def open_ones(tree):
-    return [session for session in every(tree) if session.status == OPEN]
+    """The open sessions of ordinary work. One opened to read back an earlier conversation is no
+    task's session: no command takes it for "the open session", and none ends it in passing."""
+    return [session for session in every(tree) if session.status == OPEN and session.origin is None]
 
 
-def create(context, ask="", late=False):
-    """Open a session: a fresh id, the ask, and the base the change source marks now."""
+def reading_back(tree):
+    """The open sessions that read back an earlier conversation."""
+    return [session for session in every(tree) if session.status == OPEN and session.origin is not None]
+
+
+def create(context, ask="", late=False, origin=None):
+    """Open a session: a fresh id, the ask, and the base the change source marks now. `origin` is
+    given for a session that reads back an earlier conversation."""
     tree = context.tree
     taken = [leaf[:-len(".json")] for leaf in tree.list(FOLDER)]
     base, note = mark_base(context)
@@ -170,6 +187,8 @@ def create(context, ask="", late=False):
     })
     if note:
         session.data["base-note"] = note
+    if origin is not None:
+        session.data["origin"] = origin
     save(tree, session)
     return session
 

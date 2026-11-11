@@ -31,6 +31,7 @@ COMMANDS = {
     "relabel": "cli.commands.relabel",
     "pass": "cli.commands.passes",
     "upgrade": "cli.commands.upgrade",
+    "history": "cli.commands.history",
 }
 
 SUMMARIES = {
@@ -55,6 +56,7 @@ SUMMARIES = {
     "relabel": "<store> [--one <id>]  rename a store's records to its configured label form",
     "obs": "add | list [--open|--pass <n>] | dispose <id> --as <text or ->  [--store <name>] [--session <id>]  write observations from a JSON array on standard input, print them, or set one aside during a learn pass",
     "upgrade": "run from vesta/.engine.next: replace the engine in place with this newer copy, and bring the shipped files up to date",
+    "history": "[sources] | list <source> [--last <n>] | turns <source> <conversation> [--at <n>] [--session <id>] | forget <source> <conversation>  [--in <path>]  where earlier conversations are kept, the ones found, or what was said in one",
     "pass": "seal [--hold <id>,…] [--note <file or ->]  end the open learn pass: archive what it read and write its note",
 }
 
@@ -106,6 +108,7 @@ STEPS = {
     "draft": "steps.draft",
     "gate": "steps.gate",
     "seal": "steps.seal",
+    "earlier": "steps.earlier",
 }
 KINDS = {
     "add": "proposals.add",
@@ -136,13 +139,26 @@ CAPTURE = {
 OPENINGS = {
     "start": "session.start",
     "learn": "session.learn",
+    "backfill": "session.earlier",
     "default": "session.late",
 }
 DEFAULT_OPENING = "default"
 
+# Where conversations held before now are kept, in the order they are listed.
+HISTORIES = {
+    "claude-code": "adapters.claude_code",
+    "file": "adapters.files",
+}
+
+# The checkpoints a project has where its configuration names none of that id: a walk that runs only
+# when the owner asks for it, added after a project may have been set up.
+CHECKPOINTS = {
+    "backfill": {"walk": "walks/backfill.md", "steps": ["earlier", "mint"]},
+}
+
 TABLES = {
     "steps": STEPS, "kinds": KINDS, "checks": CHECKS, "changes": CHANGES, "capture": CAPTURE,
-    "matchers": MATCHERS, "probes": PROBES, "openings": OPENINGS,
+    "matchers": MATCHERS, "probes": PROBES, "openings": OPENINGS, "histories": HISTORIES,
 }
 
 
